@@ -429,7 +429,7 @@ body {
 }
 
 .plan-header h4 { font-size: 1.5rem; margin-bottom: 10px; }
-.price { font-size: 3rem; font-weight: 900; color: var(--white); margin-bottom: 20px; }
+.price { font-size: 3.5rem; font-weight: 900; color: var(--white); margin-bottom: 20px; }
 .price span { font-size: 1rem; font-weight: 400; color: var(--gray); }
 
 .features { list-style: none; margin-bottom: 30px; text-align: left; }
@@ -1058,6 +1058,22 @@ body {
     margin-top: 10px;
 }
 
+.centavos {
+    font-size: 0.5em; /* Tamanho da fonte (metade do tamanho do 30) */
+    vertical-align: top; /* Alinha com o topo */
+    position: relative;
+    top: 0.1em; /* Ajuste fino (se ficar muito alto, aumente esse número) */
+    font-weight: bold; /* Mantém o negrito se necessário */
+}
+
+.simbolo {
+    font-size: 0.5em;
+    vertical-align: top;
+    margin-right: 5px; /* Espacinho entre R$ e 30 */
+    position: relative;
+    top: 0.1em;
+}
+
 /* CTA Final e Disclaimer */
 .referral-cta { margin-top: 50px; position: relative; z-index: 10;}
 .disclaimer {
@@ -1090,4 +1106,88 @@ body {
         padding-top: 40px;
         width: 100%;
     }
+}
+
+/* =========================================
+   SEÇÃO FAQ (ACORDEÃO)
+   ========================================= */
+.faq-section {
+    padding: 80px 20px;
+    background-color: #02040a; /* Fundo bem escuro */
+}
+
+.faq-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.faq-item {
+    margin-bottom: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    overflow: hidden;
+    transition: 0.3s;
+}
+
+/* O Botão da Pergunta */
+.faq-question {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--white);
+    padding: 20px;
+    text-align: left;
+    border: none;
+    font-size: 1.1rem;
+    font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: 0.3s;
+    font-family: 'Montserrat', sans-serif;
+}
+
+.faq-question:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--orange);
+}
+
+.faq-question i {
+    transition: 0.3s;
+    font-size: 0.9rem;
+}
+
+/* A Resposta (Escondida inicialmente) */
+.faq-answer {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+    background: rgba(5, 10, 31, 0.5);
+}
+
+.faq-answer p {
+    padding: 20px;
+    color: var(--gray);
+    line-height: 1.6;
+    font-size: 0.95rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* --- ESTADO ATIVO (QUANDO ABERTO) --- */
+.faq-item.active {
+    border-color: var(--orange); /* Borda laranja */
+    box-shadow: 0 0 15px rgba(255, 85, 0, 0.1);
+}
+
+.faq-item.active .faq-question {
+    color: var(--orange);
+    background: rgba(255, 85, 0, 0.1);
+}
+
+.faq-item.active .faq-question i {
+    transform: rotate(180deg); /* Gira a setinha */
+}
+
+.faq-item.active .faq-answer {
+    max-height: 200px; /* Altura suficiente para mostrar o texto */
 }

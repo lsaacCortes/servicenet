@@ -200,3 +200,24 @@ prevBtn.addEventListener('click', () => {
     const cardWidth = track.querySelector('.plan-card').offsetWidth + 20;
     track.scrollLeft -= cardWidth;
 });
+
+/* ----------------------------------------------------------------
+   LÓGICA DO FAQ (ACORDEÃO)
+---------------------------------------------------------------- */
+const faqItems = document.querySelectorAll('.faq-item');
+
+faqItems.forEach(item => {
+    const question = item.querySelector('.faq-question');
+    
+    question.addEventListener('click', () => {
+        // 1. Fecha todos os outros (opcional - se quiser que fique só um aberto por vez)
+        faqItems.forEach(otherItem => {
+            if (otherItem !== item) {
+                otherItem.classList.remove('active');
+            }
+        });
+
+        // 2. Alterna o atual (Abre ou Fecha)
+        item.classList.toggle('active');
+    });
+});
