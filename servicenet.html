@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ServiceNet Telecom — Conexão que você sente</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --orange:#FF6A00; /* slightly adjusted */
+      --navy:#0E2138;
+      --white:#ffffff;
+      --muted:#f4f6f9;
+      --glass: rgba(255,255,255,0.06);
+      --radius:14px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;font-family:Poppins,system-ui,Segoe UI,Roboto,Arial;color:var(--navy);background:linear-gradient(180deg,#f8fbff 0%, #ffffff 100%)}
+    a{color:inherit;text-decoration:none}
+
+    /* HERO */
+    .hero{min-height:72vh;display:flex;align-items:center;justify-content:space-between;padding:48px;gap:24px}
+    .hero__left{flex:1;max-width:640px}
+    .eyebrow{display:inline-block;background:var(--orange);color:#fff;padding:6px 12px;border-radius:999px;font-weight:700;font-size:13px}
+    h1{font-size:42px;margin:18px 0 12px;line-height:1.02;color:var(--navy)}
+    p.lead{font-size:17px;color:#273547;margin-bottom:22px}
+    .cta-row{display:flex;gap:12px;align-items:center}
+    .btn{background:var(--orange);color:#fff;border:none;padding:14px 20px;border-radius:12px;font-weight:700;cursor:pointer}
+    .btn.ghost{background:transparent;border:2px solid var(--navy);color:var(--navy)}
+    .trust{margin-top:18px;display:flex;gap:18px;align-items:center}
+    .trust small{color:#6b7a8a}
+
+    /* Animated signal */
+    .badge-signal{display:inline-flex;align-items:center;gap:10px;padding:8px 12px;background:linear-gradient(90deg,var(--navy),#0b2b4a);color:#fff;border-radius:999px}
+    .signal-dot{width:12px;height:12px;border-radius:50%;background:var(--orange);box-shadow:0 0 12px rgba(255,106,0,.6);animation:pop 2s infinite}
+    @keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.35)}100%{transform:scale(1)}}
+
+    /* right visual */
+    .hero__right{flex:1;display:flex;justify-content:center;align-items:center}
+    .card-visual{width:420px;height:420px;border-radius:20px;background:linear-gradient(135deg,#fff,#f5f9ff);box-shadow:0 6px 30px rgba(16,30,64,.12);display:grid;place-items:center;position:relative;overflow:hidden}
+    .wave{position:absolute;inset:0;opacity:.75;background:radial-gradient(circle at 10% 10%, rgba(255,106,0,.04), transparent 10%), radial-gradient(circle at 90% 90%, rgba(14,33,56,.03), transparent 20%)}
+    .device-mock{width:86%;height:86%;background:linear-gradient(180deg,#fff,#fff);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:18px}
+    .device-mock .speed{font-weight:900;font-size:38px;color:var(--navy)}
+    .device-mock .meta{color:#6b7a8a}
+
+    /* PLANS */
+    .plans{padding:28px 48px;background:linear-gradient(180deg,#fff,#f7fbff);display:flex;gap:18px;flex-wrap:wrap;justify-content:center}
+    .plan{background:linear-gradient(180deg,#fff,#f7fbff);border-radius:16px;padding:18px;width:260px;box-shadow:0 8px 24px rgba(14,33,56,.06);border:1px solid rgba(14,33,56,.04)}
+    .plan h3{margin:0 0 8px;color:var(--navy)}
+    .plan .speed{font-size:28px;font-weight:900;color:var(--navy)}
+    .plan ul{padding-left:18px;margin:10px 0 14px;color:#445765}
+    .plan .price{font-weight:900;font-size:20px;color:var(--orange)}
+
+    /* features section */
+    .features{display:flex;gap:18px;padding:40px 48px;align-items:center;justify-content:space-between}
+    .feature-list{flex:1}
+    .feature-item{display:flex;gap:12px;align-items:center;padding:12px 0}
+    .icon{width:48px;height:48px;border-radius:10px;background:var(--glass);display:grid;place-items:center;color:var(--orange);font-weight:700}
+
+    /* testimonials */
+    .testimonials{background:linear-gradient(180deg,#f8fbff,#fff);padding:28px 48px}
+    .test-grid{display:flex;gap:12px;flex-wrap:wrap}
+    .test{background:#fff;border-radius:12px;padding:14px;box-shadow:0 6px 22px rgba(14,33,56,.06);width:320px}
+
+    /* FAQ */
+    .faq{padding:28px 48px}
+    .qa{background:#fff;border-radius:10px;padding:14px;margin-bottom:10px;box-shadow:0 6px 18px rgba(14,33,56,.04)}
+    .qa h4{margin:0;cursor:pointer}
+    .qa p{margin:8px 0 0;color:#556b7d}
+
+    /* footer */
+    footer{padding:28px 48px;background:linear-gradient(180deg,#0e2138 0%, #072033 100%);color:#fff;display:flex;justify-content:space-between;flex-wrap:wrap}
+    .footer-left{max-width:420px}
+    .whatsapp{background:#25D366;padding:10px 14px;border-radius:12px;color:#072033;font-weight:700}
+
+    /* responsive */
+    @media(min-width:1100px){.hero{padding:64px 84px}.plans{padding:40px 84px}}
+    @media(max-width:900px){
+      .hero{flex-direction:column;padding:24px}
+      .hero__right{order:-1}
+      .card-visual{width:92%;height:320px}
+      .plans{flex-direction:column;gap:12px;padding:24px}
+      .features{flex-direction:column;padding:24px}
+    }
+  </style>
+</head>
+<body>
+  <header style="padding:18px 36px;display:flex;justify-content:space-between;align-items:center">
+    <div style="display:flex;gap:14px;align-items:center">
+      <div style="width:48px;height:48px;border-radius:8px;background:linear-gradient(90deg,var(--navy),var(--orange));display:grid;place-items:center;color:#fff;font-weight:900">SN</div>
+      <div>
+        <div style="font-weight:800;color:var(--navy)">ServiceNet</div>
+        <small style="color:#6b7a8a">Telecom • Itamari</small>
+      </div>
+    </div>
+    <nav style="display:flex;gap:14px;align-items:center">
+      <a class="ghost-link" href="#plans" style="padding:8px 12px;border-radius:10px;color:var(--navy);font-weight:700">Planos</a>
+      <a href="#faq" style="padding:8px 12px;border-radius:10px;color:var(--navy);font-weight:700">FAQ</a>
+      <a href="https://wa.me/5573999547814" class="whatsapp">Chama no WhatsApp</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero__left">
+        <span class="eyebrow">Chegou em Itamari</span>
+        <div style="margin-top:8px" class="badge-signal"><span class="signal-dot"></span><strong>Conexão 100% Fibra</strong></div>
+        <h1>Internet que acompanha seu ritmo — rápida, estável e cheia de benefícios</h1>
+        <p class="lead">Planos de até 900 mega, Wi‑Fi moderno e benefícios como HBO Max, Deezer, NoPing e PlayKids inclusos em planos selecionados. Escolha o plano ideal pra sua casa.</p>
+        <div class="cta-row">
+          <button class="btn" onclick="document.getElementById('plans').scrollIntoView({behavior:'smooth'})">Assine agora</button>
+          <button class="btn ghost" onclick="document.getElementById('faq').scrollIntoView({behavior:'smooth'})">Saiba mais</button>
+        </div>
+        <div class="trust"><small>Instalação grátis na promoção local • Suporte 100% humano</small></div>
+      </div>
+      <div class="hero__right">
+        <div class="card-visual" aria-hidden>
+          <div class="wave"></div>
+          <div class="device-mock">
+            <div style="text-align:center">
+              <div style="font-size:13px;color:#7a8aa0">Velocidade média de downloads</div>
+              <div class="speed">600 <span style="font-size:14px;color:#6b7a8a">mb</span></div>
+              <div class="meta">Wi‑Fi 6 • 100% Fibra Óptica</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="plans" class="plans">
+      <!-- Plan cards -->
+      <div class="plan">
+        <h3>ServiceNet Basic</h3>
+        <div class="speed">200 mb</div>
+        <ul>
+          <li>Wi‑Fi Plus</li>
+          <li>100% Fibra Óptica</li>
+          <li>ServiceTV</li>
+        </ul>
+        <div class="price">R$ 62,90 / mês</div>
+        <div style="margin-top:10px"><button class="btn" onclick="openWhats('Basic - 200 mb')">Quero esse</button></div>
+      </div>
+
+      <div class="plan">
+        <h3>ServiceNet Plus</h3>
+        <div class="speed">300 mb</div>
+        <ul>
+          <li>Wi‑Fi 6</li>
+          <li>100% Fibra Óptica</li>
+          <li>ServiceTV + Looke</li>
+        </ul>
+        <div class="price">R$ 89,90 / mês</div>
+        <div style="margin-top:10px"><button class="btn" onclick="openWhats('Plus - 300 mb')">Quero esse</button></div>
+      </div>
+
+      <div class="plan">
+        <h3>ServiceNet Turbo</h3>
+        <div class="speed">600 mb</div>
+        <ul>
+          <li>Wi‑Fi 6</li>
+          <li>100% Fibra Óptica</li>
+          <li>ServiceTV + Looke + Deezer</li>
+        </ul>
+        <div class="price">R$ 129,90 / mês</div>
+        <div style="margin-top:10px"><button class="btn" onclick="openWhats('Turbo - 600 mb')">Quero esse</button></div>
+      </div>
+
+      <div class="plan">
+        <h3>ServiceNet Power</h3>
+        <div class="speed">900 mb</div>
+        <ul>
+          <li>Wi‑Fi 6</li>
+          <li>100% Fibra Óptica</li>
+          <li>ServiceTV + Looke + Deezer + HBO Max</li>
+        </ul>
+        <div class="price">R$ 179,90 / mês</div>
+        <div style="margin-top:10px"><button class="btn" onclick="openWhats('Power - 900 mb')">Quero esse</button></div>
+      </div>
+    </section>
+
+    <section class="features">
+      <div class="feature-list">
+        <h2 style="margin:0 0 10px">Por que escolher a ServiceNet?</h2>
+        <div class="feature-item"><div class="icon">🚀</div><div><strong>Velocidade real</strong><div style="color:#556b7d">Planos que entregam a velocidade prometida.</div></div></div>
+        <div class="feature-item"><div class="icon">🤝</div><div><strong>Atendimento humano</strong><div style="color:#556b7d">Suporte local e rápido — sem robô.</div></div></div>
+        <div class="feature-item"><div class="icon">🔒</div><div><strong>Segurança</strong><div style="color:#556b7d">Configuração de rede segura e boas práticas.</div></div></div>
+      </div>
+      <div style="flex:1">
+        <img src="https://images.unsplash.com/photo-1523475496153-3d6cc6a271f8?q=80&w=800&auto=format&fit=crop&ixlib=rb-4.0.3&s=placeholder" alt="Clientes felizes" style="width:100%;border-radius:12px;object-fit:cover;height:240px">
+      </div>
+    </section>
+
+    <section class="testimonials">
+      <h3 style="margin:0 0 12px">O que dizem nossos clientes</h3>
+      <div class="test-grid" id="testGrid">
+        <div class="test"><strong>Mariana, dona de casa</strong><p>"A internet chegou na hora certa — agora minha mãe assiste novela sem travar!"</p></div>
+        <div class="test"><strong>Rafael, gamer</strong><p>"Adeus lag! Minhas partidas estão muito mais estáveis."</p></div>
+        <div class="test"><strong>João, empreendedor</strong><p>"Confiável pro home office e com um suporte que resolve rápido."</p></div>
+      </div>
+    </section>
+
+    <section class="faq" id="faq">
+      <h3>Perguntas frequentes</h3>
+      <div class="qa"><h4 onclick="toggleQA(this)">Como funciona a instalação?</h4><p style="display:none">A instalação é feita por nossa equipe em até 5 dias úteis (sujeito a análise técnica). Instalação básica gratuita na promoção.</p></div>
+      <div class="qa"><h4 onclick="toggleQA(this)">Posso testar a internet antes de contratar?</h4><p style="display:none">Sim. Em algumas regiões oferecemos um teste de velocidade gratuito no local antes da ativação final.</p></div>
+      <div class="qa"><h4 onclick="toggleQA(this)">Tem fidelidade?</h4><p style="display:none">Oferecemos planos com e sem fidelidade. Consulte condições no momento da contratação.</p></div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-left">
+      <div style="font-weight:800;font-size:18px">ServiceNet Telecom</div>
+      <div style="margin-top:8px;color:rgba(255,255,255,.85)">Conectando Itamari com internet de qualidade.</div>
+      <div style="margin-top:12px">📞 (73) 9 9954-7814</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;align-items:flex-end">
+      <div>Atendimento: Segunda a Sexta • 8h às 18h</div>
+      <a class="whatsapp" href="https://wa.me/5573999547814?text=Ol%C3%A1!%20Gostaria%20de%20saber%20mais%20sobre%20os%20planos%20da%20Servicenet">Chama no Whats</a>
+    </div>
+  </footer>
+
+  <script>
+    // simple interactions
+    function openWhats(plan){
+      const text = encodeURIComponent('Ol\u00E1! Gostaria de saber mais sobre o plano: ' + plan + ' e a promo em Itamari.');
+      const number = '5573999547814';
+      window.open('https://wa.me/'+number+'?text='+text,'_blank')
+    }
+
+    function toggleQA(el){
+      const p = el.nextElementSibling;
+      if(!p) return;
+      p.style.display = (p.style.display === 'none' || p.style.display === '') ? 'block' : 'none';
+    }
+
+    // small scroll reveal for features
+    document.addEventListener('DOMContentLoaded',()=>{
+      const heroSpeed = document.querySelector('.device-mock .speed');
+      let val = 600;
+      setInterval(()=>{
+        val = val === 600 ? 900 : 600;
+        heroSpeed.textContent = val + ' ';
+      },2500);
+    });
+  </script>
+</body>
+</html>

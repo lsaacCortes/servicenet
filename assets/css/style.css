@@ -1,0 +1,1093 @@
+/* =========================================
+   ROLAGEM SUAVE (SMOOTH SCROLL)
+   ========================================= */
+html {
+    /* Faz a mágica do deslizamento */
+    scroll-behavior: smooth;
+    
+    /* Impede que o menu fixo cubra o título da seção */
+    /* Colocamos 120px para dar uma margem de respiro */
+    scroll-padding-top: 120px; 
+}
+
+/* =========================================
+   1. VARIÁVEIS E BASE
+   ========================================= */
+:root {
+    --navy: #050A1F; /* Azul Profundo */
+    --navy-light: #0d1636;
+    --orange: #FF5500; /* Laranja Neon */
+    --orange-glow: #ff6b00;
+    --white: #ffffff;
+    --gray: #a0a0a0;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    cursor: none; /* Esconde o cursor padrão para usar o personalizado */
+}
+
+body {
+    font-family: 'Montserrat', sans-serif;
+    background-color: var(--navy);
+    color: var(--white);
+    overflow-x: hidden;
+}
+
+/* =========================================
+   2. CURSOR PERSONALIZADO
+   ========================================= */
+.cursor, .cursor-follower {
+    position: fixed;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%, -50%);
+}
+.cursor {
+    width: 8px;
+    height: 8px;
+    background-color: var(--orange);
+}
+.cursor-follower {
+    width: 30px;
+    height: 30px;
+    border: 2px solid var(--orange);
+    transition: transform 0.1s, width 0.3s, height 0.3s;
+    opacity: 0.6;
+}
+
+/* =========================================
+   3. NAVBAR (MENU)
+   ========================================= */
+#navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 50px;
+    position: fixed;
+    width: 100%;
+    top: 0;
+    z-index: 1000;
+    background: rgba(5, 10, 31, 0.8);
+    backdrop-filter: blur(10px);
+}
+.logo {
+    font-weight: 900;
+    font-size: 1.5rem;
+    letter-spacing: 1px;
+}
+.highlight { color: var(--orange); }
+
+.btn-nav {
+    text-decoration: none;
+    color: var(--white);
+    border: 1px solid var(--orange);
+    padding: 10px 20px;
+    border-radius: 30px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    transition: 0.3s;
+}
+.btn-nav:hover { background: var(--orange); }
+
+/* =========================================
+   4. HERO SECTION (NOVO LAYOUT DIVIDIDO)
+   ========================================= */
+.hero {
+    position: relative;
+    min-height: 100vh; /* Garante altura total */
+    display: block; /* Mudança: permite usar container */
+    padding-top: 100px; /* Espaço para o menu fixo */
+    overflow: hidden;
+    /* Fundo gradiente sutil */
+    background: radial-gradient(circle at center, #1a2550 0%, var(--navy) 80%);
+}
+
+/* Container para centralizar o conteúdo do hero */
+.hero .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    height: 100%;
+}
+
+/* O Grid que divide a tela */
+.hero-grid {
+    display: flex;
+    align-items: center; /* Centraliza verticalmente */
+    justify-content: space-between;
+    gap: 50px;
+    height: calc(100vh - 100px); /* Altura da tela menos o menu */
+    position: relative;
+    z-index: 3;
+    padding: 40px 20px;
+}
+
+/* --- LADO ESQUERDO (TEXTO) --- */
+.hero-text-side {
+    flex: 1; /* Ocupa metade */
+    text-align: left;
+    padding-right: 20px;
+}
+
+.hero-text-side h1 {
+    font-size: 3.5rem;
+    line-height: 1.1;
+    font-weight: 900;
+    margin-bottom: 15px;
+}
+.hero-text-side h2 {
+    font-size: 2rem;
+    margin-bottom: 20px;
+}
+
+.hero-text-side p {
+    font-size: 1.1rem;
+    color: var(--gray);
+    margin-bottom: 30px;
+    max-width: 500px;
+    line-height: 1.6;
+}
+
+/* Badge (Etiqueta "Chegou a Fibra") */
+.badge-new {
+    display: inline-block;
+    background: rgba(255, 85, 0, 0.15);
+    color: var(--orange);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    margin-bottom: 20px;
+    border: 1px solid var(--orange);
+    letter-spacing: 1px;
+}
+
+/* Estatísticas (Velocímetro + Suporte) */
+.hero-stats {
+    display: flex;
+    gap: 30px;
+    margin-bottom: 40px;
+}
+.stat-item {
+    font-weight: bold;
+    color: var(--white);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.1rem;
+}
+.stat-item i { color: var(--orange); font-size: 1.4rem; }
+#speed-count { font-size: 1.5rem; color: var(--orange); }
+
+/* Grupo de Botões Hero */
+.cta-group {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+/* Botão Principal (Preenchido) */
+.btn-hero {
+    display: inline-block;
+    background-color: var(--orange);
+    color: var(--white);
+    padding: 15px 40px;
+    font-size: 1.1rem;
+    font-weight: 900;
+    text-decoration: none;
+    border-radius: 50px;
+    box-shadow: 0 0 20px rgba(255, 85, 0, 0.4);
+    transition: transform 0.3s;
+}
+.btn-hero:hover { transform: scale(1.05); }
+
+/* Botão Secundário (Outline) */
+.btn-hero-outline {
+    display: inline-block;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    color: var(--white);
+    padding: 13px 30px;
+    font-size: 1rem;
+    font-weight: bold;
+    text-decoration: none;
+    border-radius: 50px;
+    transition: 0.3s;
+}
+.btn-hero-outline:hover {
+    background: var(--white);
+    color: var(--navy);
+    border-color: var(--white);
+}
+
+/* --- LADO DIREITO (IMAGEM) --- */
+.hero-image-side {
+    flex: 1;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* A Imagem do Técnico */
+.tech-img {
+    width: 100%;
+    max-width: 500px;
+    border-radius: 20px; /* Arredonda se for foto quadrada */
+    position: relative;
+    z-index: 2;
+    /* Animação de Flutuação */
+    animation: float 6s ease-in-out infinite;
+    /* Sombra suave */
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+}
+
+/* O Brilho atrás do técnico */
+.tech-glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 60%;
+    padding-bottom: 60%; /* Faz ser um quadrado/círculo proporcional */
+    background: var(--orange);
+    filter: blur(90px); /* O desfoque que cria o brilho */
+    opacity: 0.35;
+    z-index: 1;
+    border-radius: 50%;
+}
+
+/* Animação Float (Flutuar) */
+@keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-20px); }
+    100% { transform: translateY(0px); }
+}
+
+/* Animação Pulse (Botão) */
+.pulse { animation: pulse 2s infinite; }
+@keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(255, 85, 0, 0.7); }
+    70% { box-shadow: 0 0 0 15px rgba(255, 85, 0, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 85, 0, 0); }
+}
+
+/* Canvas e Overlay (Fundo) */
+#network-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    pointer-events: none;
+    opacity: 0.4;
+}
+.overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+    background: radial-gradient(circle at center, transparent 0%, var(--navy) 90%);
+    pointer-events: none;
+}
+
+/* =========================================
+   5. SEÇÃO DE BENEFÍCIOS
+   ========================================= */
+.benefits { padding: 80px 20px; background-color: var(--navy-light); position: relative; z-index: 5; }
+.container { max-width: 1200px; margin: 0 auto; text-align: center; }
+.section-title { font-size: 2rem; margin-bottom: 50px; }
+
+.benefits-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+.benefit-card {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 30px;
+    border-radius: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: 0.3s;
+}
+.benefit-card i { font-size: 3rem; margin-bottom: 15px; color: var(--orange); }
+.benefit-card:hover { transform: translateY(-10px); border-color: var(--orange); }
+
+/* =========================================
+   6. SEÇÃO DE PLANOS
+   ========================================= */
+.plans-section { padding: 80px 20px; position: relative; z-index: 5; }
+/* =========================================
+   CARROSSEL DE PLANOS (3 VISÍVEIS)
+   ========================================= */
+
+.carousel-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding: 0 40px; /* Espaço para as setas não ficarem em cima dos cards */
+}
+
+/* O Container que desliza */
+.plans-container {
+    display: flex;
+    gap: 20px;
+    overflow-x: auto; /* Permite rolar */
+    scroll-behavior: smooth; /* Rolagem suave */
+    
+    /* Esconde a barra de rolagem feia */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none;  /* IE and Edge */
+    
+    padding: 40px 10px; /* Espaço vertical para sombras */
+    width: 100%;
+}
+
+/* Esconde scrollbar no Chrome/Safari */
+.plans-container::-webkit-scrollbar {
+    display: none;
+}
+
+/* CONFIGURAÇÃO DOS CARDS PARA CABEREM 3 */
+.plan-card {
+    /* Cálculo Matemático: 
+       (100% da tela / 3 cards) - (ajuste dos espaços) 
+    */
+    min-width: calc(33.333% - 14px); 
+    
+    /* Mantém o visual antigo */
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 40px 20px;
+    text-align: center;
+    position: relative;
+    transition: 0.3s;
+}
+
+/* O Card de Destaque */
+.plan-card.featured {
+    background: rgba(5, 10, 31, 0.9);
+    border: 2px solid var(--orange);
+    transform: scale(1.05); /* Fica um pouquinho maior */
+    z-index: 2;
+}
+
+/* --- BOTÕES DE NAVEGAÇÃO (SETAS) --- */
+.arrow-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(5, 10, 31, 0.8);
+    color: var(--orange);
+    border: 2px solid var(--orange);
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    font-size: 1.2rem;
+    cursor: pointer;
+    z-index: 10;
+    transition: 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.arrow-btn:hover {
+    background: var(--orange);
+    color: var(--white);
+    transform: translateY(-50%) scale(1.1);
+}
+
+.arrow-btn.left { left: 0; }
+.arrow-btn.right { right: 0; }
+
+/* RESPONSIVO: No celular mostramos apenas 1 por vez */
+@media (max-width: 900px) {
+    .plan-card {
+        min-width: 100%; /* Mostra 1 inteiro */
+        /* Ou min-width: 85%; se quiser mostrar a pontinha do próximo */
+    }
+    .carousel-wrapper { padding: 0; }
+    .arrow-btn { display: none; } /* No celular a pessoa usa o dedo, esconde setas */
+}
+.tag {
+    position: absolute;
+    top: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--orange);
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 0.8rem;
+}
+
+.plan-header h4 { font-size: 1.5rem; margin-bottom: 10px; }
+.price { font-size: 3rem; font-weight: 900; color: var(--white); margin-bottom: 20px; }
+.price span { font-size: 1rem; font-weight: 400; color: var(--gray); }
+
+.features { list-style: none; margin-bottom: 30px; text-align: left; }
+.features li { margin-bottom: 10px; color: var(--gray); }
+.features li i { color: var(--orange); margin-right: 10px; }
+
+.btn-solid {
+    display: block;
+    background: var(--orange);
+    color: var(--white);
+    padding: 15px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: bold;
+    transition: 0.3s;
+}
+.btn-outline {
+    display: block;
+    border: 1px solid var(--white);
+    color: var(--white);
+    padding: 15px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: bold;
+    transition: 0.3s;
+}
+.btn-outline:hover { background: var(--white); color: var(--navy); }
+
+/* =========================================
+   7. RODAPÉ (FOOTER) - NOVO DESIGN DARK
+   ========================================= */
+
+/* O Container Principal do Rodapé */
+.main-footer {
+    background-color: var(--navy); /* Fundo ESCURO */
+    border-top: 2px solid var(--orange); /* O toque neon no topo */
+    padding: 80px 20px 20px 20px;
+    color: var(--white);
+    position: relative;
+    z-index: 10;
+}
+
+/* O Grid que organiza as 3 colunas */
+.footer-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 50px;
+    margin-bottom: 50px;
+    text-align: left;
+}
+
+/* --- Estilos das Colunas --- */
+
+/* Coluna 1: Logo e Social */
+.footer-logo {
+    font-size: 1.8rem;
+    font-weight: 900;
+    margin-bottom: 15px;
+    letter-spacing: 1px;
+}
+.slogan-footer {
+    color: var(--gray);
+    margin-bottom: 20px;
+    font-size: 0.9rem;
+}
+.social-links {
+    display: flex;
+    gap: 15px;
+}
+.social-links a {
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    color: var(--white);
+    text-decoration: none;
+    transition: 0.3s;
+    border: 1px solid transparent;
+}
+.social-links a:hover {
+    background: var(--orange);
+    border-color: var(--orange);
+    transform: translateY(-5px);
+}
+
+/* Títulos das Colunas (Onde Estamos / Fale com a Gente) */
+.footer-col h4 {
+    font-size: 1.1rem;
+    margin-bottom: 25px;
+    color: var(--orange); /* Laranja para destaque */
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Listas de Contato (Endereço, CNPJ, Tel) */
+.contact-list {
+    list-style: none;
+}
+.contact-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+    margin-bottom: 15px;
+    color: var(--gray);
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+.contact-list li i {
+    color: var(--orange); /* Ícone Laranja */
+    font-size: 1.1rem;
+    margin-top: 3px;
+}
+.contact-list li a {
+    color: var(--gray);
+    text-decoration: none;
+    transition: 0.3s;
+}
+.contact-list li a:hover {
+    color: var(--white);
+    padding-left: 5px;
+}
+
+/* Copyright (Barra Final) */
+.footer-bottom {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 20px;
+    text-align: center;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+/* Responsividade do Footer */
+@media (max-width: 768px) {
+    .footer-grid { text-align: center; }
+    .contact-list li {
+        justify-content: center;
+        flex-direction: column;
+        align-items: center;
+    }
+    .social-links { justify-content: center; }
+}
+
+/* =========================================
+   ELEMENTOS FLUTUANTES E ANIMAÇÕES (MANTIDOS)
+   ========================================= */
+
+/* Botão Flutuante do WhatsApp */
+.float-btn {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: #25D366;
+    color: white;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+    box-shadow: 2px 2px 10px rgba(0,0,0,0.3);
+    z-index: 1000;
+    transition: 0.3s;
+}
+.float-btn:hover { transform: scale(1.1); }
+
+/* Animação de Scroll (Fade In) */
+.fade-in {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.8s ease-out;
+}
+.fade-in.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* =========================================
+   8. RESPONSIVIDADE (CELULAR/TABLET)
+   ========================================= */
+@media (max-width: 900px) {
+    /* Navbar */
+    #navbar { padding: 15px 20px; }
+    
+    /* Hero Section (Vira Coluna) */
+    .hero { height: auto; padding-bottom: 50px; }
+    
+    .hero-grid {
+        flex-direction: column-reverse; /* Imagem em cima, texto embaixo */
+        height: auto;
+        text-align: center;
+        justify-content: center;
+        gap: 30px;
+    }
+
+    /* Ajustes Texto */
+    .hero-text-side {
+        padding-right: 0;
+        text-align: center;
+    }
+    .hero-text-side h1 { font-size: 2.5rem; }
+    .hero-text-side h2 { font-size: 1.5rem; }
+    .hero-text-side p { margin: 0 auto 30px auto; }
+    
+    .hero-stats { justify-content: center; }
+    
+    .cta-group { justify-content: center; flex-wrap: wrap; }
+    
+    /* Ajustes Imagem */
+    .tech-img {
+        max-width: 320px;
+    }
+    .tech-glow {
+        width: 250px;
+        height: 250px;
+        padding-bottom: 0;
+    }
+
+    /* Planos e Benefícios */
+    .plan-card.featured { transform: scale(1); width: 100%; }
+    .plan-card { width: 100%; }
+
+    /* Cursor Normal no Touch */
+    * { cursor: auto; }
+    .cursor, .cursor-follower { display: none; }
+}
+
+/* =========================================
+   SEÇÃO QUEM SOMOS
+   ========================================= */
+.about-section {
+    padding: 100px 20px;
+    background-color: var(--navy); /* Mantém o fundo escuro */
+    position: relative;
+}
+
+.about-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    align-items: center;
+}
+
+/* Tipografia e Texto */
+.about-intro {
+    font-size: 1.1rem;
+    color: var(--gray);
+    line-height: 1.6;
+    margin-bottom: 40px;
+    border-left: 4px solid var(--orange);
+    padding-left: 20px;
+}
+
+/* Lista de Diferenciais */
+.about-features {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.feature-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+}
+
+.feature-item i {
+    font-size: 1.5rem;
+    color: var(--orange);
+    background: rgba(255, 85, 0, 0.1);
+    padding: 15px;
+    border-radius: 12px;
+    transition: 0.3s;
+}
+
+.feature-item:hover i {
+    background: var(--orange);
+    color: var(--white);
+    transform: scale(1.1);
+}
+
+.feature-item h5 {
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: var(--white);
+}
+
+.feature-item p {
+    font-size: 0.95rem;
+    color: var(--gray);
+}
+
+/* Imagem e Badge */
+.about-image {
+    position: relative;
+}
+
+.server-img {
+    width: 100%;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    filter: brightness(0.8) contrast(1.2); /* Deixa a imagem mais "tech" */
+    transition: 0.5s;
+}
+
+.about-image:hover .server-img {
+    filter: brightness(1);
+}
+
+/* O quadrado flutuante com "100% Fibra" */
+.exp-badge {
+    position: absolute;
+    bottom: -30px;
+    left: -30px;
+    background: var(--orange);
+    padding: 30px;
+    border-radius: 15px;
+    color: var(--white);
+    text-align: center;
+    box-shadow: 10px 10px 30px rgba(0,0,0,0.3);
+    animation: float 5s ease-in-out infinite;
+}
+
+.exp-badge .number {
+    display: block;
+    font-size: 2.5rem;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.exp-badge .label {
+    font-size: 0.9rem;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+/* Responsivo */
+@media (max-width: 900px) {
+    .about-grid {
+        grid-template-columns: 1fr;
+        gap: 40px;
+    }
+    
+    .section-title { text-align: center !important; }
+    
+    .exp-badge {
+        right: 0;
+        left: auto;
+        bottom: -20px;
+    }
+}
+
+/* =========================================
+   PRE-LOADER (TELA DE CARREGAMENTO)
+   ========================================= */
+#preloader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--navy);
+    z-index: 99999; /* Fica acima de TUDO, até do cursor */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 0.8s ease, visibility 0.8s;
+}
+
+/* Quando o site carrega, adicionamos essa classe para sumir */
+#preloader.hide-loader {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.loader-container {
+    position: relative;
+    width: 100px;
+    height: 100px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+/* Anel Externo (Laranja Neon) */
+.loader-ring {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border: 3px solid transparent;
+    border-top-color: var(--orange);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    box-shadow: 0 0 15px rgba(255, 85, 0, 0.5);
+}
+
+/* Anel Interno (Branco - gira ao contrário) */
+.loader-ring-2 {
+    position: absolute;
+    width: 70%;
+    height: 70%;
+    border: 3px solid transparent;
+    border-bottom-color: var(--white);
+    border-radius: 50%;
+    animation: spin-reverse 1.5s linear infinite;
+}
+
+/* Logo Central */
+.loader-logo {
+    font-weight: 900;
+    color: var(--white);
+    font-size: 1.5rem;
+    animation: pulse-text 1s infinite alternate;
+}
+
+/* Texto abaixo */
+.loader-text {
+    font-size: 0.9rem;
+    letter-spacing: 3px;
+    color: var(--gray);
+    font-weight: bold;
+    animation: blink 1.5s infinite;
+}
+
+/* Animações */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes spin-reverse {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(-360deg); }
+}
+
+@keyframes pulse-text {
+    from { opacity: 0.5; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* =========================================
+   ANIMAÇÕES DE SCROLL (SCROLL REVEAL)
+   ========================================= */
+
+/* 1. Configuração Padrão (Elemento Escondido) */
+.reveal {
+    opacity: 0;
+    transition: all 1s ease-out; /* Tempo da animação */
+    will-change: transform, opacity; /* Otimização de performance */
+}
+
+/* 2. Tipos de Movimento Inicial */
+
+/* Move de baixo para cima (Ideal para Cards e Textos) */
+.reveal-up {
+    transform: translateY(50px); 
+}
+
+/* Vem da Esquerda (Ideal para Textos na esquerda) */
+.reveal-left {
+    transform: translateX(-50px);
+}
+
+/* Vem da Direita (Ideal para Imagens na direita) */
+.reveal-right {
+    transform: translateX(50px);
+}
+
+/* 3. O Estado Final (Quando o elemento aparece na tela) */
+.reveal.active {
+    opacity: 1;
+    transform: translate(0, 0); /* Volta para a posição original */
+}
+
+/* Dica Pro: Atraso para elementos em grupo (Ex: Cards de Planos) */
+/* Faz o segundo card aparecer um pouco depois do primeiro */
+.delay-200 { transition-delay: 0.2s; }
+.delay-400 { transition-delay: 0.4s; }
+
+/* =========================================
+   SEÇÃO INDIQUE E GANHE (LIQUID GLASS)
+   ========================================= */
+.referral-section {
+    padding: 100px 20px;
+    background-color: var(--navy);
+    position: relative;
+    overflow: hidden; /* Essencial para conter os orbs */
+    text-align: center;
+}
+
+/* --- Elementos de Fundo (Orbs Brilhantes) --- */
+/* Estes são os elementos que vão "borrar" atrás do vidro */
+.glow-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.4;
+    z-index: 1;
+}
+.orb-1 {
+    width: 300px; height: 300px;
+    background: var(--orange);
+    top: 10%; left: -100px;
+    animation: move-orb-1 15s infinite alternate ease-in-out;
+}
+.orb-2 {
+    width: 250px; height: 250px;
+    background: #0044ff; /* Um azul para contrastar */
+    bottom: 10%; right: -100px;
+    animation: move-orb-2 12s infinite alternate ease-in-out;
+}
+
+@keyframes move-orb-1 {
+    0% { transform: translate(0, 0); }
+    100% { transform: translate(200px, 100px); }
+}
+@keyframes move-orb-2 {
+    0% { transform: translate(0, 0); }
+    100% { transform: translate(-200px, -100px); }
+}
+
+
+/* --- O Container de Vidro (Glassmorphism) --- */
+.glass-container {
+    position: relative;
+    z-index: 10; /* Fica acima dos orbs */
+    max-width: 980px;
+    margin: 50px auto;
+    
+    /* A MÁGICA DO VIDRO AQUI: */
+    background: rgba(255, 255, 255, 0.03); /* Fundo branco quase invisível */
+    backdrop-filter: blur(25px) saturate(120%); /* Desfoque forte do fundo */
+    -webkit-backdrop-filter: blur(25px) saturate(120%); /* Compatibilidade Safari */
+    border: 1px solid rgba(255, 255, 255, 0.1); /* Borda de gelo */
+    border-radius: 30px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.2); /* Sombra suave */
+    overflow: hidden;
+}
+
+.glass-content {
+    display: flex;
+    align-items: center;
+    padding: 50px;
+    text-align: left;
+}
+
+/* --- Lado Esquerdo: Passos --- */
+.referral-steps {
+    flex: 3; /* Ocupa mais espaço */
+    padding-right: 40px;
+}
+.referral-steps h4 {
+    color: var(--orange);
+    margin-bottom: 30px;
+    font-size: 1.2rem;
+    letter-spacing: 1px;
+}
+
+.step-item {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+.step-number {
+    font-size: 2rem;
+    font-weight: 900;
+    color: rgba(255,255,255,0.2); /* Número sutil no fundo */
+    line-height: 1;
+}
+.step-text h5 {
+    font-size: 1.1rem;
+    color: var(--white);
+    margin-bottom: 5px;
+}
+.step-text p {
+    font-size: 0.95rem;
+    color: var(--gray);
+}
+
+/* --- Lado Direito: Recompensa Visual --- */
+.referral-reward {
+    flex: 2;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    padding-left: 40px;
+}
+
+.reward-card {
+    text-align: center;
+    /* Um vidro dentro do vidro para destacar */
+    background: rgba(255, 85, 0, 0.1);
+    border: 2px solid var(--orange);
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 0 30px rgba(255, 85, 0, 0.2);
+}
+
+.reward-icon {
+    font-size: 3rem;
+    color: var(--orange);
+    margin-bottom: 10px;
+}
+.reward-amount {
+    font-size: 3.5rem;
+    font-weight: 900;
+    color: var(--white);
+    line-height: 1;
+}
+.reward-label {
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: var(--orange);
+    margin-top: 10px;
+}
+
+/* CTA Final e Disclaimer */
+.referral-cta { margin-top: 50px; position: relative; z-index: 10;}
+.disclaimer {
+    margin-top: 20px;
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.4);
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+    .glass-content {
+        flex-direction: column;
+        padding: 30px;
+        text-align: center;
+    }
+    .referral-steps {
+        padding-right: 0;
+        margin-bottom: 40px;
+    }
+    .step-item {
+        flex-direction: column;
+        align-items: center;
+    }
+    .step-text { text-align: center; }
+    
+    .referral-reward {
+        border-left: none;
+        padding-left: 0;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        padding-top: 40px;
+        width: 100%;
+    }
+}
