@@ -1,0 +1,22 @@
+name: Deploy no Servidor
+
+on:
+  push:
+    branches:
+      - main  # Altere para 'master' se a sua branch principal utilizar esse nome
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Conectar via SSH e atualizar repositório
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            cd /var/www/servicenetpro.com.br/site
+            git pull origin main
