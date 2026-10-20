@@ -1,0 +1,17 @@
+/* Custom CSS complementar ao Tailwind */
+
+body {
+    /* Garante que o body não pisque antes do Tailwind carregar a fonte, além de reforçar o padrão */
+    font-family: 'Raleway', sans-serif;
+}
+
+/* Suaviza o autocomplete dos navegadores (Google Chrome, Edge) 
+   para evitar que o fundo do input de CPF fique azul/amarelo de repente 
+   e sobreponha o estilo original do Tailwind */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active{
+    -webkit-box-shadow: 0 0 0 30px white inset !important;
+    -webkit-text-fill-color: #172a4c !important;
+}
