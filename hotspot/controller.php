@@ -1,9 +1,24 @@
 <?php
 session_start();
 
-// Trava de Segurança: Bloqueia acesso direto sem passar pelo MikroTik
-if (empty($_GET['mac']) && empty($_GET['link-login'])) {
-    // Redireciona o curioso para o site principal da empresa
+// Guardar parâmetros na Sessão para não perder durante o POST/Redirecionamento
+if (!empty($_GET['mac'])) {
+    $_SESSION['mac_cliente'] = $_GET['mac'];
+}
+if (!empty($_GET['ip'])) {
+    $_SESSION['ip_cliente'] = $_GET['ip'];
+}
+if (!empty($_GET['link-login'])) {
+    $_SESSION['link_login_mikrotik'] = $_GET['link-login'];
+}
+
+// Resgata das variáveis GET ou da Sessão gravada
+$mac_cliente = $_GET['mac'] ?? $_SESSION['mac_cliente'] ?? '';
+$ip_cliente  = $_GET['ip'] ?? $_SESSION['ip_cliente'] ?? '';
+$link_login_mikrotik = $_GET['link-login'] ?? $_SESSION['link_login_mikrotik'] ?? 'http://10.50.1.1/login';
+
+// Trava de Segurança: Se não tem MAC e nem Link de Login (nem via GET e nem via Sessão), bloqueia
+if (empty($mac_cliente) && empty($_GET['link-login']) && empty($_SESSION['link_login_mikrotik'])) {
     header("Location: https://servicenetpro.com.br/");
     exit;
 }
@@ -11,17 +26,13 @@ if (empty($_GET['mac']) && empty($_GET['link-login'])) {
 // ==========================================
 // 1. CONFIGURAÇÕES DA API SGP (URA)
 // ==========================================
-$sgp_url = "http://177.190.223.11:8000/api/ura/consultacliente/";
+$sgp_url   = "http://177.190.223.11:8000/api/ura/consultacliente/";
 $sgp_token = "6f2ca57b-9c3e-4538-9e33-2cf80963f828";
-$sgp_app = "SGP";
+$sgp_app   = "SGP";
 
 // ==========================================
 // 2. INICIALIZAÇÃO DE VARIÁVEIS (Para a View)
 // ==========================================
-$mac_cliente = $_GET['mac'] ?? '';
-$ip_cliente  = $_GET['ip'] ?? '';
-$link_login_mikrotik = $_GET['link-login'] ?? 'http://10.5.50.1/login';
-
 $mensagem_erro = $_SESSION['hotspot_erro'] ?? '';
 $login_sucesso = $_SESSION['hotspot_sucesso'] ?? false;
 
@@ -37,10 +48,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!empty($cpf) && strlen($cpf) === 11) {
 
         $post_data = [
-            'app' => $sgp_app,
-            'token' => $sgp_token,
+            'app'     => $sgp_app,
+            'token'   => $sgp_token,
             'cpfcnpj' => $cpf,
-            'status' => '1' // Parâmetro da API para buscar apenas normais
+            'status'  => '1' // Parâmetro da API para buscar apenas normais
         ];
 
         $curl = curl_init();
@@ -65,13 +76,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($http_status == 200 && !empty($dados['contratos'])) {
             foreach ($dados['contratos'] as $contrato) {
-                // Usando os nomes exatos das chaves reveladas no raio-X do SGP
                 $status_codigo = (string)($contrato['contratoStatus'] ?? '');
                 $status_texto  = strtolower(trim($contrato['contratoStatusDisplay'] ?? ''));
 
                 if ($status_codigo === '1' || $status_texto === 'ativo') {
                     $cliente_ativo = true;
-                    break; // Achou um ativo, não precisa checar os outros
+                    break;
                 }
             }
         }
@@ -86,10 +96,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['hotspot_erro'] = "Por favor, digite um CPF válido com 11 dígitos.";
     }
 
-    // Redireciona via GET para limpar o POST (Evita popup de reenvio no F5)
+    // Redireciona via GET preservando a query string para não perder as variáveis
     $redirect = strtok($_SERVER['REQUEST_URI'], '?');
-    $qs = http_build_query(['mac' => $mac_cliente, 'ip' => $ip_cliente, 'link-login' => $link_login_mikrotik]);
+    $qs = http_build_query([
+        'mac'        => $mac_cliente, 
+        'ip'         => $ip_cliente, 
+        'link-login' => $link_login_mikrotik
+    ]);
+    
     header("Location: {$redirect}" . ($qs ? "?{$qs}" : ''));
-    exit; // Mata o script aqui para o redirecionamento funcionar imediatamente
+    exit;
 }
 ?>
