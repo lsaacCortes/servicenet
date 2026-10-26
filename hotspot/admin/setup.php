@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // =============================================================
 // Script de Setup do Banco de Dados
 // Execute UMA VEZ: http://localhost/servicenet/hotspot/admin/setup.php
