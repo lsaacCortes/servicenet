@@ -53,7 +53,7 @@
 
         <!-- Cabeçalho com Logo -->
         <div class="bg-primary py-8 flex justify-center">
-            <img src="assets/img/logo.PNG" alt="Logo ServiceNet" class="logo-bordered h-28 w-auto object-contain"
+            <img src="assets/img/logo.PNG" alt="Logo ServiceNet" class="logo-bordered h-36 w-auto"
                 onerror="this.outerHTML='<div class=\'text-3xl font-extrabold text-white border-4 border-white rounded-2xl px-4 py-2\'>ServiceNet</div>'">
         </div>
 
@@ -146,8 +146,10 @@
                         <button type="button" class="btn-lead" onclick="abrirModalLead()">
                             Quero ser cliente
                         </button>
+                    </div>
+                </form>
 
-                        <!-- Modal de Captação de Lead -->
+                <!-- Modal de Captação de Lead -->
                         <div id="modalLead" class="modal-overlay" style="display: none;">
                             <div class="modal-content">
                                 <span class="modal-close" onclick="fecharModalLead()">&times;</span>
@@ -178,8 +180,6 @@
                                 </form>
                             </div>
                         </div>
-                    </div>
-                </form>
             <?php endif; ?>
         </div>
 

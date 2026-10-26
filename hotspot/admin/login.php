@@ -83,13 +83,13 @@ if (isset($_SESSION['admin_id'])) {
         }
 
         .logo-bordered {
-            border: 3px solid rgba(255, 255, 255, 0.85);
-            border-radius: 16px;
-            padding: 10px 18px;
-            background: rgba(255,255,255,0.06);
-            backdrop-filter: blur(8px);
-            box-shadow: 0 0 0 1px rgba(255,255,255,0.15), 0 0 30px rgba(255,76,48,0.3);
-            filter: drop-shadow(0 0 18px rgba(255,76,48,0.35));
+        border: 3px solid rgba(255, 255, 255, 0.85);
+        border-radius: 50%;
+        padding: 8px;
+        background: #fff;
+        object-fit: contain;
+        box-shadow: 0 0 0 1px rgba(255,255,255,0.15), 0 0 30px rgba(255,76,48,0.3);
+        filter: drop-shadow(0 0 18px rgba(255,76,48,0.35));
         }
 
         .glass-input {
@@ -145,7 +145,7 @@ if (isset($_SESSION['admin_id'])) {
                 <div class="flex justify-center mb-5">
                     <img src="../assets/img/logo.PNG"
                          alt="ServiceNet"
-                         class="h-20 w-auto object-contain logo-bordered"
+                         class="h-28 w-auto logo-bordered"
                          onerror="this.outerHTML='<div class=\'text-2xl font-extrabold text-white border-2 border-white rounded-xl px-4 py-2\'>ServiceNet</div>'">
                 </div>
                 <h1 class="text-2xl font-bold text-white mb-1">Painel de Gestao</h1>

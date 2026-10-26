@@ -80,13 +80,11 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: whitesmoke;
 }
 .sidebar-logo img {
-    height: 56px;
+    height: 84px;
     width: auto;
     object-fit: contain;
-    filter: drop-shadow(0 0 12px rgba(255, 76, 48, 0.35));
 }
 
 .sidebar-nav {
@@ -236,15 +234,15 @@
 .stat-card:nth-child(4) { animation-delay: 0.20s; }
 .stat-card:nth-child(5) { animation-delay: 0.25s; }
 .stat-card:nth-child(6) { animation-delay: 0.30s; }
-/* ---- Logo com Borda Branca ---- */
+/* ---- Logo em circulo branco com borda ---- */
 .logo-bordered {
-    border-radius: 16px;
-    padding: 10px 18px;
-    background: rgba(255,255,255,0.06);
-    backdrop-filter: blur(8px);
+    border: 3px solid rgba(255, 255, 255, 0.85);
+    border-radius: 50%;
+    padding: 8px;
+    background: #fff;
+    object-fit: contain;
     box-shadow: 0 0 0 1px rgba(255,255,255,0.15), 0 0 30px rgba(255,76,48,0.3);
-    filter: drop-shadow(0 0 16px rgba(255,76,48,0.3));
-    transition: box-shadow 0.3s ease;
+    filter: drop-shadow(0 0 18px rgba(255,76,48,0.35));
 }
 .logo-bordered:hover {
     box-shadow: 0 0 0 1px rgba(255,255,255,0.3), 0 0 40px rgba(255,76,48,0.5);
