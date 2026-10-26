@@ -1,14 +1,9 @@
 <?php
-session_start();
+require_once 'session.php';
 require_once 'db.php';
 
+admin_require_login(true);
 header('Content-Type: application/json');
-
-// Apenas usuarios autenticados
-if (!isset($_SESSION['admin_id'])) {
-    echo json_encode(['success' => false, 'message' => 'Nao autorizado.']);
-    exit;
-}
 
 $action = $_POST['action'] ?? '';
 $id     = (int)($_POST['id'] ?? 0);

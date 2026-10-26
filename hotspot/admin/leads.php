@@ -1,9 +1,6 @@
 <?php
-session_start();
-if (!isset($_SESSION['admin_id'])) {
-    header('Location: login.php');
-    exit;
-}
+require_once 'session.php';
+admin_require_login();
 require_once 'db.php';
 $pdo = getDB();
 
@@ -191,6 +188,7 @@ $adminNome = $_SESSION['admin_nome'] ?? 'Admin';
                     <p class="text-white text-sm font-semibold"><?= htmlspecialchars($adminNome) ?></p>
                     <p class="text-xs opacity-50 text-white"><?= date('d/m/Y') ?></p>
                 </div>
+                <a href="auth.php?action=logout" class="btn-sair" title="Sair"><i class="fa-solid fa-right-from-bracket"></i><span>Sair</span></a>
                 <div class="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm text-white" style="background: rgba(255,76,48,0.8);">
                     <?= strtoupper(substr($adminNome, 0, 1)) ?>
                 </div>

@@ -1,9 +1,6 @@
 <?php
-session_start();
-if (!isset($_SESSION['admin_id'])) {
-    header('Location: login.php');
-    exit;
-}
+require_once 'session.php';
+admin_require_login();
 require_once 'db.php';
 
 if (empty($_SESSION['csrf'])) {
@@ -111,8 +108,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <p class="text-xs opacity-50 text-white">Conta: <?= htmlspecialchars($_SESSION['admin_user'] ?? '') ?></p>
                 </div>
             </div>
-            <div class="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm text-white" style="background: rgba(255,76,48,0.8);">
+            <div class="flex items-center gap-3">
+                <a href="auth.php?action=logout" class="btn-sair" title="Sair"><i class="fa-solid fa-right-from-bracket"></i><span>Sair</span></a>
+                <div class="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm text-white" style="background: rgba(255,76,48,0.8);">
                 <?= strtoupper(substr($adminNome, 0, 1)) ?>
+            </div>
             </div>
         </header>
 

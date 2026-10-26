@@ -247,3 +247,21 @@
 .logo-bordered:hover {
     box-shadow: 0 0 0 1px rgba(255,255,255,0.3), 0 0 40px rgba(255,76,48,0.5);
 }
+
+/* ---- Botao Sair no topbar ---- */
+.btn-sair {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #ff7a61;
+    background: rgba(255, 76, 48, 0.15);
+    border: 1px solid rgba(255, 76, 48, 0.3);
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+.btn-sair:hover { background: rgba(255, 76, 48, 0.3); color: #fff; }
+@media (max-width: 480px) { .btn-sair span { display: none; } }

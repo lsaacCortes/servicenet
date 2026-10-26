@@ -1,8 +1,14 @@
 <?php
-session_start();
+require_once 'session.php';
+admin_session_start();
+admin_no_cache();
 require_once 'db.php';
 
 $error = '';
+if (!empty($_SESSION['sessao_expirada'])) {
+    $error = 'Sua sessao expirou. Faca login novamente.';
+    unset($_SESSION['sessao_expirada']);
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = trim($_POST['username'] ?? '');
@@ -19,6 +25,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if ($user && password_verify($password, $user['password'])) {
                 session_regenerate_id(true);
+                $_SESSION['login_time']    = time();
+                $_SESSION['last_activity'] = time();
                 $_SESSION['admin_id']   = $user['id'];
                 $_SESSION['admin_nome'] = $user['nome'];
                 $_SESSION['admin_user'] = $user['username'];
