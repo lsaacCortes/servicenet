@@ -1,0 +1,3 @@
+﻿# Protege a pasta admin - apenas acesso direto via URL do mesmo servidor
+Options -Indexes
+ErrorDocument 403 /servicenet/hotspot/admin/login.php

@@ -1,3 +1,8 @@
 <FilesMatch "\.php$">
     SetHandler application/x-httpd-php
 </FilesMatch>
+
+# Bloqueia acesso web a arquivos sensiveis
+<FilesMatch "(^leads\.csv$|^config(\.example)?\.php$|^\.setup_enabled$)">
+    Require all denied
+</FilesMatch>
