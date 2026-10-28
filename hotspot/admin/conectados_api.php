@@ -17,6 +17,7 @@ function out(array $data, int $code = 200): void
 
 const MAC_RE = '/^([0-9A-F]{2}:){5}[0-9A-F]{2}$/i';
 const ID_RE  = '/^\*[0-9A-Fa-f]+$/';
+const LIMITES_KBPS = [512, 1024, 2048, 5120, 10240];
 
 try {
     $pdo = getDB();
@@ -64,14 +65,22 @@ try {
 
     // Derruba a sessao e apaga o cookie do aparelho; sem isso o roteador pode
     // reabrir o acesso sozinho (login por cookie) e o cliente nao ve o portal.
-    $derrubar = function (array $a) use ($router): void {
+    // $limites: lista de limites ja carregada (evita reler a cada cliente em "desconectar todos")
+    $derrubar = function (array $a, ?array $limites = null) use ($router, $pdo): void {
         $router->removeActive($a['id']);
         if (preg_match(MAC_RE, $a['mac'])) {
             try {
                 $router->clearCookies($a['mac']);
+                // O limite vale para a sessao: ao derrubar, remove para nao sobrar fila com IP velho
+                foreach ($limites ?? $router->limitList() as $l) {
+                    if ($l['mac'] === $a['mac']) {
+                        $router->removeLimit($l['id']);
+                    }
+                }
             } catch (RouterOsException $e) {
-                // a sessao ja caiu; a limpeza do cookie e complementar
+                // a sessao ja caiu; a limpeza e complementar
             }
+            hotspot_mark_ended($pdo, $a['mac'], 'painel');
         }
     };
 
@@ -79,8 +88,30 @@ try {
         case 'list':
             $active = $router->activeList();
             $map    = $cpfs(array_column($active, 'mac'));
+
+            // Limites de velocidade: acompanha troca de IP e apaga os de quem ja saiu
+            $limite = [];
+            try {
+                $porMac = array_column($active, null, 'mac');
+                foreach ($router->limitList() as $l) {
+                    $a = $porMac[$l['mac']] ?? null;
+                    if (!$a) {
+                        $router->removeLimit($l['id']);
+                        continue;
+                    }
+                    if ($a['ip'] !== $l['ip']) {
+                        $router->setLimit($l['mac'], $a['ip'], $l['kbps'], $l['comment']);
+                    }
+                    $limite[$l['mac']] = $l;
+                }
+            } catch (RouterOsException $e) {
+                // sem acesso as filas: a lista de clientes segue funcionando
+            }
+
             foreach ($active as &$a) {
-                $a['cpf'] = mask_cpf($map[$a['mac']] ?? '');
+                $a['cpf']        = mask_cpf($map[$a['mac']] ?? '');
+                $a['limite_id']  = $limite[$a['mac']]['id'] ?? null;
+                $a['limite_kbps'] = $limite[$a['mac']]['kbps'] ?? null;
             }
             unset($a);
             out(['success' => true, 'perfil' => $perfil, 'active' => $active]);
@@ -133,10 +164,54 @@ try {
             admin_log($pdo, 'desbloquear', $mac);
             out(['success' => true, 'message' => 'Cliente desbloqueado.']);
 
+        case 'limit':
+            $id   = $_POST['id'] ?? '';
+            $kbps = (int) ($_POST['kbps'] ?? 0);
+            if (!preg_match(ID_RE, $id)) {
+                out(['success' => false, 'message' => 'Sessao invalida.'], 400);
+            }
+            if (!in_array($kbps, LIMITES_KBPS, true)) {
+                out(['success' => false, 'message' => 'Velocidade invalida.'], 400);
+            }
+            $a = $findActive($id);
+            if (!$a || !preg_match(MAC_RE, $a['mac']) || $a['ip'] === '') {
+                out(['success' => false, 'message' => 'Esse cliente ja nao esta conectado.']);
+            }
+            $comentario = 'Limitado pelo painel por ' . ($_SESSION['admin_user'] ?? '?') . ' em ' . date('d/m/Y H:i');
+            $noTopo = $router->setLimit($a['mac'], $a['ip'], $kbps, $comentario);
+            admin_log($pdo, 'limitar', $a['mac'], "IP {$a['ip']} limite " . ($kbps >= 1024 ? ($kbps / 1024) . ' Mbps' : "$kbps Kbps"));
+            out([
+                'success' => true,
+                'message' => $noTopo
+                    ? 'Limite de velocidade aplicado.'
+                    : 'Limite criado, mas nao foi possivel colocar a regra no topo da fila do roteador; confira se ele esta valendo.',
+            ]);
+
+        case 'unlimit':
+            $id = $_POST['id'] ?? '';
+            if (!preg_match(ID_RE, $id)) {
+                out(['success' => false, 'message' => 'Limite invalido.'], 400);
+            }
+            $mac = '';
+            foreach ($router->limitList() as $l) {
+                if ($l['id'] === $id) {
+                    $mac = $l['mac'];
+                }
+            }
+            $router->removeLimit($id);
+            admin_log($pdo, 'remover_limite', $mac);
+            out(['success' => true, 'message' => 'Limite removido.']);
+
         case 'disconnect_all':
             $n = 0;
+            $limites = null;
+            try {
+                $limites = $router->limitList();
+            } catch (RouterOsException $e) {
+                $limites = [];
+            }
             foreach ($router->activeList() as $a) {
-                $derrubar($a);
+                $derrubar($a, $limites);
                 $n++;
             }
             admin_log($pdo, 'desconectar_todos', '', "$n sessoes derrubadas");

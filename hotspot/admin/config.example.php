@@ -16,6 +16,13 @@ define('ROUTER_PASS', '');
 define('ROUTER_SSL',  false);
 define('ROUTER_MOCK', false);       // true = dados simulados, para testar a tela
 
+// Alertas (opcional): aviso tambem no Telegram. Crie um bot com o @BotFather e
+// descubra o chat id mandando uma mensagem ao bot e abrindo /getUpdates.
+define('ALERT_TELEGRAM_TOKEN', '');
+define('ALERT_TELEGRAM_CHAT',  '');
+// Opcional: permite agendar alertas_cron.php por URL (?token=...). Deixe vazio para so aceitar linha de comando.
+define('ALERT_CRON_TOKEN', '');
+
 // Opcional: senha inicial do usuario 'admin' criado pelo setup.php.
 // Se ficar vazia, o setup gera uma senha aleatoria e a exibe uma unica vez.
 define('ADMIN_INITIAL_PASSWORD', '');

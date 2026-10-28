@@ -38,9 +38,53 @@ function ensure_schema(PDO $pdo): void
             `mac`        VARCHAR(17) NOT NULL,
             `ip`         VARCHAR(45) DEFAULT NULL,
             `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            KEY `idx_mac` (`mac`, `id`)
+            `encerrado_em`     DATETIME DEFAULT NULL,
+            `encerrado_motivo` VARCHAR(30) DEFAULT NULL,
+            KEY `idx_mac` (`mac`, `id`),
+            KEY `idx_created` (`created_at`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     ");
+
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS `alert_config` (
+            `chave` VARCHAR(40)  NOT NULL PRIMARY KEY,
+            `valor` VARCHAR(255) NOT NULL
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    ");
+    // 0 = desligado
+    $pdo->exec("INSERT IGNORE INTO alert_config (chave, valor) VALUES
+        ('max_conectados', '0'), ('max_trafego_mb', '0'), ('ultima_execucao', '0')");
+
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS `alertas` (
+            `id`             INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            `tipo`           VARCHAR(20)  NOT NULL,
+            `chave`          VARCHAR(40)  NOT NULL,
+            `mensagem`       VARCHAR(255) NOT NULL,
+            `created_at`     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            `resolvido_em`   DATETIME DEFAULT NULL,
+            `reconhecido_em` DATETIME DEFAULT NULL,
+            `reconhecido_por` VARCHAR(100) DEFAULT NULL,
+            KEY `idx_aberto` (`resolvido_em`, `chave`),
+            KEY `idx_pend` (`reconhecido_em`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    ");
+
+    // Tabelas criadas antes do historico de acessos
+    if (!$pdo->query("SHOW COLUMNS FROM hotspot_logins LIKE 'encerrado_em'")->fetch()) {
+        $pdo->exec("ALTER TABLE hotspot_logins
+            ADD COLUMN `encerrado_em` DATETIME DEFAULT NULL,
+            ADD COLUMN `encerrado_motivo` VARCHAR(30) DEFAULT NULL,
+            ADD KEY `idx_created` (`created_at`)");
+    }
+}
+
+// Registra o fim do acesso do ultimo login ainda aberto daquele aparelho
+function hotspot_mark_ended(PDO $pdo, string $mac, string $motivo): void
+{
+    $pdo->prepare("UPDATE hotspot_logins SET encerrado_em = NOW(), encerrado_motivo = ?
+                   WHERE mac = ? AND encerrado_em IS NULL ORDER BY id DESC LIMIT 1")
+        ->execute([$motivo, strtoupper($mac)]);
 }
 
 function admin_perfil(PDO $pdo): string

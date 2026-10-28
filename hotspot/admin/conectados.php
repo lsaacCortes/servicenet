@@ -55,6 +55,9 @@ $adminNome = $_SESSION['admin_nome'] ?? 'Admin';
             <a href="rede.php" class="nav-item"><i class="fa-solid fa-network-wired w-5 text-center"></i><span>Rede</span></a>
             <a href="leads.php" class="nav-item"><i class="fa-solid fa-users w-5 text-center"></i><span>Leads</span></a>
             <a href="conectados.php" class="nav-item active"><i class="fa-solid fa-wifi w-5 text-center"></i><span>Conectados</span></a>
+            <a href="historico.php" class="nav-item"><i class="fa-solid fa-clock-rotate-left w-5 text-center"></i><span>Histórico</span></a>
+            <a href="alertas.php" class="nav-item"><i class="fa-solid fa-bell w-5 text-center"></i><span>Alertas</span></a>
+            <a href="auditoria.php" class="nav-item"><i class="fa-solid fa-clipboard-list w-5 text-center"></i><span>Auditoria</span></a>
             <a href="usuarios.php" class="nav-item"><i class="fa-solid fa-user-shield w-5 text-center"></i><span>Administradores</span></a>
             <a href="senha.php" class="nav-item"><i class="fa-solid fa-key w-5 text-center"></i><span>Alterar senha</span></a>
             <a href="auth.php?action=logout" class="nav-item mt-auto"><i class="fa-solid fa-right-from-bracket w-5 text-center"></i><span>Sair</span></a>
@@ -100,6 +103,31 @@ $adminNome = $_SESSION['admin_nome'] ?? 'Admin';
             <p id="vazio" class="hidden text-center text-white opacity-50 py-12"></p>
         </div>
     </main>
+
+    <div id="limiteModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4" style="background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);">
+        <div class="rounded-2xl w-full max-w-sm p-6" style="background: rgba(20,30,55,0.95); border: 1px solid rgba(255,255,255,0.15);">
+            <h3 id="limiteTitulo" class="text-white font-bold text-lg mb-1">Limitar velocidade</h3>
+            <p id="limiteQuem" class="text-sm mb-1" style="color: rgba(255,255,255,0.5);"></p>
+            <p id="limiteAtual" class="hidden text-sm font-semibold mb-3" style="color: #fde68a;"></p>
+            <label class="block text-sm font-semibold mb-1.5" style="color: rgba(255,255,255,0.7);">Velocidade máxima (download e upload)</label>
+            <select id="limiteVel" class="w-full py-2.5 px-3 rounded-xl text-sm text-white" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2);">
+                <option value="512" style="color:#000">512 Kbps</option>
+                <option value="1024" style="color:#000">1 Mbps</option>
+                <option value="2048" selected style="color:#000">2 Mbps</option>
+                <option value="5120" style="color:#000">5 Mbps</option>
+                <option value="10240" style="color:#000">10 Mbps</option>
+            </select>
+            <p class="text-xs mt-3" style="color: rgba(255,255,255,0.45);">O limite vale enquanto o cliente estiver conectado. Se ele for desconectado ou sair, é removido.</p>
+            <button id="limiteRemover" onclick="removerLimite()" class="hidden w-full mt-4 py-2 rounded-xl text-sm font-bold"
+                    style="background: rgba(255,76,48,0.15); border: 1px solid rgba(255,76,48,0.35); color: #ff7a61;">
+                <i class="fa-solid fa-gauge-high"></i> Remover limite (voltar à velocidade normal)
+            </button>
+            <div class="flex gap-3 mt-3">
+                <button onclick="fecharLimite()" class="flex-1 py-2.5 rounded-xl text-sm font-bold text-white" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);">Cancelar</button>
+                <button id="limiteOk" onclick="aplicarLimite()" class="flex-1 py-2.5 rounded-xl text-sm font-bold text-white" style="background: linear-gradient(135deg, #ff4c30, #e63825);">Aplicar</button>
+            </div>
+        </div>
+    </div>
 
     <script>
     const PODE_AGIR = <?= $podeAgir ? 'true' : 'false' ?>;
@@ -193,20 +221,26 @@ $adminNome = $_SESSION['admin_nome'] ?? 'Admin';
         let n = 0, tb;
 
         if (aba === 'ativos') {
-            tb = cabecalho(['CPF', 'IP', 'MAC', 'Conectado ha', 'Ocioso', 'Upload', 'Download', 'Login via', PODE_AGIR ? 'Acoes' : '']);
+            tb = cabecalho(['CPF', 'IP', 'MAC', 'Conectado ha', 'Ocioso', 'Upload', 'Download', 'Limite', 'Login via', PODE_AGIR ? 'Acoes' : '']);
             filtro(ativos).forEach(r => {
                 n++;
                 const tr = el('tr');
                 tr.append(el('td', '', r.cpf || '—'), el('td', '', r.ip), el('td', '', r.mac), el('td', '', r.uptime || '—'));
                 tr.append(el('td', durS(r.idle) >= IDLE_ALERTA_S ? 'idle-alto' : '', r.idle || '—'));
-                tr.append(el('td', '', fmtBytes(r.up)), el('td', '', fmtBytes(r.down)), el('td', '', r.login || '—'));
+                tr.append(el('td', '', fmtBytes(r.up)), el('td', '', fmtBytes(r.down)));
+                tr.append(el('td', r.limite_kbps ? 'idle-alto' : '', r.limite_kbps ? fmtVel(r.limite_kbps) : '—'));
+                tr.append(el('td', '', r.login || '—'));
                 const td = el('td');
                 if (PODE_AGIR) {
-                    const d =el('button', 'act-btn act-warn mr-2', 'Desconectar');
+                    const l = el('button', 'act-btn act-ok mr-2', r.limite_kbps ? 'Alterar' : 'Limitar');
+                    l.onclick = () => abrirLimite(r);
+                    td.append(l);
+                    const d = el('button', 'act-btn act-warn mr-2', 'Desconectar');
                     d.onclick = () => acao('disconnect', r, 'Desconectar ' + r.ip + '? O cliente precisara fazer login novamente.');
                     const b = el('button', 'act-btn act-danger', 'Bloquear');
                     b.onclick = () => acao('block', r, 'Bloquear ' + r.mac + '? O dispositivo sera desconectado e nao conseguira reconectar ate ser desbloqueado.');
                     td.append(d, b);
+                    td.style.whiteSpace = 'nowrap';
                 }
                 tr.append(td); tb.append(tr);
             });
@@ -250,6 +284,52 @@ $adminNome = $_SESSION['admin_nome'] ?? 'Admin';
         carregar();
     }
 
+    function fmtVel(kbps) { return kbps >= 1024 ? (kbps / 1024) + ' Mbps' : kbps + ' Kbps'; }
+
+    let limiteAlvo = null;
+    function abrirLimite(r) {
+        limiteAlvo = r;
+        const jaLimitado = !!r.limite_kbps;
+        $('limiteTitulo').textContent = jaLimitado ? 'Alterar limite de velocidade' : 'Limitar velocidade';
+        $('limiteAtual').textContent = jaLimitado ? 'Limite atual: ' + fmtVel(r.limite_kbps) : '';
+        $('limiteAtual').classList.toggle('hidden', !jaLimitado);
+        $('limiteRemover').classList.toggle('hidden', !jaLimitado);
+        const opcao = [...$('limiteVel').options].find(o => +o.value === r.limite_kbps);
+        $('limiteVel').value = opcao ? opcao.value : '2048';
+        $('limiteQuem').textContent = (r.cpf ? r.cpf + ' · ' : '') + r.ip + ' · ' + r.mac;
+        $('limiteModal').classList.remove('hidden');
+        $('limiteModal').classList.add('flex');
+    }
+    function fecharLimite() {
+        $('limiteModal').classList.add('hidden');
+        $('limiteModal').classList.remove('flex');
+        limiteAlvo = null;
+    }
+    async function aplicarLimite() {
+        if (!limiteAlvo) return;
+        const btn = $('limiteOk'); btn.disabled = true;
+        try {
+            const res = await api('limit', { id: limiteAlvo.id, kbps: $('limiteVel').value });
+            aviso(res.success ? '' : res.message);
+            if (res.success) { toast(res.message); fecharLimite(); }
+        } catch (e) { aviso('Erro de comunicacao.'); }
+        btn.disabled = false;
+        carregar();
+    }
+    async function removerLimite() {
+        const r = limiteAlvo;
+        if (!r || !r.limite_id) return;
+        if (!confirm('Remover o limite de velocidade de ' + r.ip + '?')) return;
+        const btn = $('limiteRemover'); btn.disabled = true;
+        try {
+            const res = await api('unlimit', { id: r.limite_id });
+            aviso(res.success ? '' : res.message);
+            if (res.success) { toast(res.message); fecharLimite(); }
+        } catch (e) { aviso('Erro de comunicacao.'); }
+        btn.disabled = false;
+        carregar();
+    }
+
     function toast(msg) {
         const t = el('div', '', msg);
         t.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:60;padding:12px 18px;border-radius:12px;font-weight:700;font-size:14px;color:#fff;background:rgba(22,163,74,.9);box-shadow:0 8px 30px rgba(0,0,0,.4)';
@@ -275,5 +355,6 @@ $adminNome = $_SESSION['admin_nome'] ?? 'Admin';
     setInterval(carregar, 5000);
     document.addEventListener('visibilitychange', carregar);
     </script>
+    <script src="assets/alertas.js" defer></script>
 </body>
 </html>

@@ -163,6 +163,18 @@ $adminNome = $_SESSION['admin_nome'] ?? 'Admin';
                 <i class="fa-solid fa-wifi w-5 text-center"></i>
                 <span>Conectados</span>
             </a>
+            <a href="historico.php" class="nav-item">
+                <i class="fa-solid fa-clock-rotate-left w-5 text-center"></i>
+                <span>Histórico</span>
+            </a>
+            <a href="alertas.php" class="nav-item">
+                <i class="fa-solid fa-bell w-5 text-center"></i>
+                <span>Alertas</span>
+            </a>
+            <a href="auditoria.php" class="nav-item">
+                <i class="fa-solid fa-clipboard-list w-5 text-center"></i>
+                <span>Auditoria</span>
+            </a>
             <a href="usuarios.php" class="nav-item">
                 <i class="fa-solid fa-user-shield w-5 text-center"></i>
                 <span>Administradores</span>
@@ -479,5 +491,6 @@ $adminNome = $_SESSION['admin_nome'] ?? 'Admin';
         if (e.target === this) closeModal();
     });
     </script>
+    <script src="assets/alertas.js" defer></script>
 </body>
 </html>

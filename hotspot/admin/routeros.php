@@ -193,6 +193,13 @@ interface HotspotRouter
     public function blockedList(): array;
     public function block(string $mac, string $comment): void;
     public function unblock(string $bindingId): void;
+
+    /** Limites de velocidade criados pelo painel (fila simples "painel-limite-<MAC>").
+     *  @return array<int,array{id:string,mac:string,ip:string,kbps:int,comment:string}> */
+    public function limitList(): array;
+    /** Cria ou atualiza o limite do aparelho. Retorna false se nao conseguiu colocar a fila no topo. */
+    public function setLimit(string $mac, string $ip, int $kbps, string $comment): bool;
+    public function removeLimit(string $id): void;
 }
 
 class HotspotRouterReal implements HotspotRouter
@@ -261,6 +268,67 @@ class HotspotRouterReal implements HotspotRouter
     public function unblock(string $bindingId): void
     {
         $this->api->command('/ip/hotspot/ip-binding/remove', ['.id' => $bindingId]);
+    }
+
+    private const LIMIT_PREFIX = 'painel-limite-';
+
+    public function limitList(): array
+    {
+        $out = [];
+        foreach ($this->api->command('/queue/simple/print') as $r) {
+            $name = $r['name'] ?? '';
+            if (strpos($name, self::LIMIT_PREFIX) !== 0) {
+                continue;
+            }
+            $hex = strtoupper(substr($name, strlen(self::LIMIT_PREFIX)));
+            if (!preg_match('/^[0-9A-F]{12}$/', $hex)) {
+                continue;
+            }
+            // max-limit = "upload/download" em bps; os limites do painel sao simetricos
+            $down = (int) (explode('/', $r['max-limit'] ?? '0/0')[1] ?? 0);
+            $out[] = [
+                'id'      => $r['.id'] ?? '',
+                'mac'     => implode(':', str_split($hex, 2)),
+                'ip'      => preg_replace('~/\d+$~', '', $r['target'] ?? ''),
+                'kbps'    => intdiv($down, 1000),
+                'comment' => $r['comment'] ?? '',
+            ];
+        }
+        return $out;
+    }
+
+    public function setLimit(string $mac, string $ip, int $kbps, string $comment): bool
+    {
+        $rate  = "{$kbps}k/{$kbps}k";
+        $attrs = ['target' => "$ip/32", 'max-limit' => $rate, 'comment' => $comment];
+
+        foreach ($this->limitList() as $l) {
+            if ($l['mac'] === strtoupper($mac)) {
+                $this->api->command('/queue/simple/set', ['.id' => $l['id']] + $attrs);
+                return true;
+            }
+        }
+
+        $name = self::LIMIT_PREFIX . str_replace(':', '', strtoupper($mac));
+        $this->api->command('/queue/simple/add', ['name' => $name] + $attrs);
+
+        // Fila simples vale a primeira que casar: sobe a nova para o topo, senao uma regra
+        // geral acima dela anularia o limite.
+        try {
+            $novo = $this->api->command('/queue/simple/print', ['.proplist' => '.id'], ["name=$name"])[0]['.id'] ?? '';
+            $topo = $this->api->command('/queue/simple/print', ['.proplist' => '.id'])[0]['.id'] ?? '';
+            if ($novo !== '' && $topo !== '' && $novo !== $topo) {
+                $this->api->command('/queue/simple/move', ['numbers' => $novo, 'destination' => $topo]);
+            }
+            return true;
+        } catch (RouterOsException $e) {
+            return false;
+        }
+    }
+
+    public function removeLimit(string $id): void
+    {
+        $this->api->command('/queue/simple/remove', ['.id' => $id]);
     }
 }
 
@@ -344,6 +412,28 @@ class HotspotRouterMock implements HotspotRouter
     {
         $d = $this->load();
         $d['blocked'] = array_values(array_filter($d['blocked'], fn($r) => $r['id'] !== $bindingId));
+        $this->save($d);
+    }
+
+    public function limitList(): array
+    {
+        return $this->load()['limits'] ?? [];
+    }
+
+    public function setLimit(string $mac, string $ip, int $kbps, string $comment): bool
+    {
+        $d   = $this->load();
+        $mac = strtoupper($mac);
+        $d['limits'] = array_values(array_filter($d['limits'] ?? [], fn($l) => $l['mac'] !== $mac));
+        $d['limits'][] = ['id' => '*F' . $d['next']++, 'mac' => $mac, 'ip' => $ip, 'kbps' => $kbps, 'comment' => $comment];
+        $this->save($d);
+        return true;
+    }
+
+    public function removeLimit(string $id): void
+    {
+        $d = $this->load();
+        $d['limits'] = array_values(array_filter($d['limits'] ?? [], fn($l) => $l['id'] !== $id));
         $this->save($d);
     }
 }
