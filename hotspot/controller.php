@@ -88,6 +88,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($cliente_ativo) {
             $_SESSION['hotspot_sucesso'] = true;
+            // Guarda quem (CPF) esta em qual aparelho (MAC), para o painel de gestao
+            require_once __DIR__ . '/admin/schema.php';
+            hotspot_log_login($cpf, $mac_cliente, $ip_cliente);
         } else {
             $_SESSION['hotspot_erro'] = "CPF não localizado ou contrato possui pendências financeiras.";
         }

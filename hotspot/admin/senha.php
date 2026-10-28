@@ -85,6 +85,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <i class="fa-solid fa-users w-5 text-center"></i>
                 <span>Leads</span>
             </a>
+            <a href="conectados.php" class="nav-item">
+                <i class="fa-solid fa-wifi w-5 text-center"></i>
+                <span>Conectados</span>
+            </a>
+            <a href="usuarios.php" class="nav-item">
+                <i class="fa-solid fa-user-shield w-5 text-center"></i>
+                <span>Administradores</span>
+            </a>
             <a href="senha.php" class="nav-item active">
                 <i class="fa-solid fa-key w-5 text-center"></i>
                 <span>Alterar senha</span>
