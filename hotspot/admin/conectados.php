@@ -193,16 +193,16 @@ $adminNome = $_SESSION['admin_nome'] ?? 'Admin';
         let n = 0, tb;
 
         if (aba === 'ativos') {
-            tb = cabecalho(['CPF', 'IP', 'MAC', 'Conectado ha', 'Ocioso', 'Upload', 'Download', PODE_AGIR ? 'Acoes' : '']);
+            tb = cabecalho(['CPF', 'IP', 'MAC', 'Conectado ha', 'Ocioso', 'Upload', 'Download', 'Login via', PODE_AGIR ? 'Acoes' : '']);
             filtro(ativos).forEach(r => {
                 n++;
                 const tr = el('tr');
                 tr.append(el('td', '', r.cpf || '—'), el('td', '', r.ip), el('td', '', r.mac), el('td', '', r.uptime || '—'));
                 tr.append(el('td', durS(r.idle) >= IDLE_ALERTA_S ? 'idle-alto' : '', r.idle || '—'));
-                tr.append(el('td', '', fmtBytes(r.up)), el('td', '', fmtBytes(r.down)));
+                tr.append(el('td', '', fmtBytes(r.up)), el('td', '', fmtBytes(r.down)), el('td', '', r.login || '—'));
                 const td = el('td');
                 if (PODE_AGIR) {
-                    const d = el('button', 'act-btn act-warn mr-2', 'Desconectar');
+                    const d =el('button', 'act-btn act-warn mr-2', 'Desconectar');
                     d.onclick = () => acao('disconnect', r, 'Desconectar ' + r.ip + '? O cliente precisara fazer login novamente.');
                     const b = el('button', 'act-btn act-danger', 'Bloquear');
                     b.onclick = () => acao('block', r, 'Bloquear ' + r.mac + '? O dispositivo sera desconectado e nao conseguira reconectar ate ser desbloqueado.');

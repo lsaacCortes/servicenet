@@ -184,9 +184,11 @@ class RouterOsClient
 // =============================================================
 interface HotspotRouter
 {
-    /** @return array<int,array{id:string,user:string,ip:string,mac:string,uptime:string,idle:string,up:int,down:int}> */
+    /** @return array<int,array{id:string,user:string,ip:string,mac:string,uptime:string,idle:string,login:string,up:int,down:int}> */
     public function activeList(): array;
     public function removeActive(string $id): void;
+    /** Apaga os cookies de login do aparelho, para ele nao entrar de novo sem o portal. */
+    public function clearCookies(string $mac): int;
     /** @return array<int,array{id:string,mac:string,comment:string}> */
     public function blockedList(): array;
     public function block(string $mac, string $comment): void;
@@ -208,6 +210,7 @@ class HotspotRouterReal implements HotspotRouter
                 'mac'    => strtoupper($r['mac-address'] ?? ''),
                 'uptime' => $r['uptime'] ?? '',
                 'idle'   => $r['idle-time'] ?? '',
+                'login'  => $r['login-by'] ?? '',
                 // bytes-in = recebido do cliente (upload); bytes-out = enviado ao cliente (download)
                 'up'     => (int) ($r['bytes-in'] ?? 0),
                 'down'   => (int) ($r['bytes-out'] ?? 0),
@@ -219,6 +222,18 @@ class HotspotRouterReal implements HotspotRouter
     public function removeActive(string $id): void
     {
         $this->api->command('/ip/hotspot/active/remove', ['.id' => $id]);
+    }
+
+    public function clearCookies(string $mac): int
+    {
+        $n = 0;
+        foreach ($this->api->command('/ip/hotspot/cookie/print', [], ["mac-address=$mac"]) as $r) {
+            if (!empty($r['.id'])) {
+                $this->api->command('/ip/hotspot/cookie/remove', ['.id' => $r['.id']]);
+                $n++;
+            }
+        }
+        return $n;
     }
 
     public function blockedList(): array
@@ -294,7 +309,7 @@ class HotspotRouterMock implements HotspotRouter
         foreach ($this->load()['active'] as $r) {
             $out[] = [
                 'id' => $r['id'], 'user' => $r['user'], 'ip' => $r['ip'], 'mac' => $r['mac'],
-                'uptime' => self::dur(time() - $r['start']), 'idle' => self::dur($r['idle']),
+                'uptime' => self::dur(time() - $r['start']), 'idle' => self::dur($r['idle']), 'login' => 'http-pap',
                 'up' => $r['up'], 'down' => $r['down'],
             ];
         }
@@ -306,6 +321,11 @@ class HotspotRouterMock implements HotspotRouter
         $d = $this->load();
         $d['active'] = array_values(array_filter($d['active'], fn($r) => $r['id'] !== $id));
         $this->save($d);
+    }
+
+    public function clearCookies(string $mac): int
+    {
+        return 0;
     }
 
     public function blockedList(): array

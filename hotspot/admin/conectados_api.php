@@ -62,6 +62,19 @@ try {
         return null;
     };
 
+    // Derruba a sessao e apaga o cookie do aparelho; sem isso o roteador pode
+    // reabrir o acesso sozinho (login por cookie) e o cliente nao ve o portal.
+    $derrubar = function (array $a) use ($router): void {
+        $router->removeActive($a['id']);
+        if (preg_match(MAC_RE, $a['mac'])) {
+            try {
+                $router->clearCookies($a['mac']);
+            } catch (RouterOsException $e) {
+                // a sessao ja caiu; a limpeza do cookie e complementar
+            }
+        }
+    };
+
     switch ($action) {
         case 'list':
             $active = $router->activeList();
@@ -100,7 +113,7 @@ try {
                     $router->block($a['mac'], 'Bloqueado pelo painel por ' . ($_SESSION['admin_user'] ?? '?') . ' em ' . date('d/m/Y H:i'));
                 }
             }
-            $router->removeActive($id);
+            $derrubar($a);
             $cpf = mask_cpf($cpfs([$a['mac']])[$a['mac']] ?? '');
             admin_log($pdo, $action === 'block' ? 'bloquear' : 'desconectar', $a['mac'], "IP {$a['ip']}" . ($cpf ? " CPF $cpf" : ''));
             out(['success' => true, 'message' => $action === 'block' ? 'Cliente bloqueado e desconectado.' : 'Cliente desconectado.']);
@@ -123,7 +136,7 @@ try {
         case 'disconnect_all':
             $n = 0;
             foreach ($router->activeList() as $a) {
-                $router->removeActive($a['id']);
+                $derrubar($a);
                 $n++;
             }
             admin_log($pdo, 'desconectar_todos', '', "$n sessoes derrubadas");
