@@ -85,6 +85,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <i class="fa-solid fa-users w-5 text-center"></i>
                 <span>Leads</span>
             </a>
+            <a href="rede.php" class="nav-item">
+                <i class="fa-solid fa-network-wired w-5 text-center"></i>
+                <span>Rede</span>
+            </a>
             <a href="conectados.php" class="nav-item">
                 <i class="fa-solid fa-wifi w-5 text-center"></i>
                 <span>Conectados</span>

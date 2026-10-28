@@ -102,6 +102,7 @@ $usuarios = $pdo->query("SELECT id, username, nome, perfil, created_at FROM admi
         </div>
         <nav class="sidebar-nav">
             <a href="dashboard.php" class="nav-item"><i class="fa-solid fa-chart-line w-5 text-center"></i><span>Dashboard</span></a>
+            <a href="rede.php" class="nav-item"><i class="fa-solid fa-network-wired w-5 text-center"></i><span>Rede</span></a>
             <a href="leads.php" class="nav-item"><i class="fa-solid fa-users w-5 text-center"></i><span>Leads</span></a>
             <a href="conectados.php" class="nav-item"><i class="fa-solid fa-wifi w-5 text-center"></i><span>Conectados</span></a>
             <a href="usuarios.php" class="nav-item active"><i class="fa-solid fa-user-shield w-5 text-center"></i><span>Administradores</span></a>
