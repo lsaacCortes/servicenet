@@ -70,6 +70,34 @@ function ensure_schema(PDO $pdo): void
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     ");
 
+    // Pos-venda: contratos do SGP acompanhados 7 dias apos a ativacao
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS `posvenda` (
+            `id`                INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            `id_contrato`       INT UNSIGNED NOT NULL,
+            `id_cliente`        INT UNSIGNED DEFAULT NULL,
+            `nome`              VARCHAR(150) NOT NULL,
+            `cpfcnpj`           VARCHAR(14)  DEFAULT NULL,
+            `telefone`          VARCHAR(30)  DEFAULT NULL,
+            `email`             VARCHAR(150) DEFAULT NULL,
+            `bairro`            VARCHAR(100) DEFAULT NULL,
+            `cidade`            VARCHAR(100) DEFAULT NULL,
+            `status_contrato`   VARCHAR(30)  DEFAULT NULL,
+            `data_cadastro`     DATETIME DEFAULT NULL,
+            `ativado_em`        DATETIME NOT NULL,
+            `status`            ENUM('pendente','em_contato','sem_resposta','concluido') NOT NULL DEFAULT 'pendente',
+            `resultado`         ENUM('satisfeito','problema_resolvido','precisa_visita','outro') DEFAULT NULL,
+            `anotacoes`         TEXT DEFAULT NULL,
+            `ultimo_contato_em` DATETIME DEFAULT NULL,
+            `ultimo_contato_por` VARCHAR(100) DEFAULT NULL,
+            `concluido_em`      DATETIME DEFAULT NULL,
+            `created_at`        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            `updated_at`        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            UNIQUE KEY `uk_contrato` (`id_contrato`),
+            KEY `idx_status` (`status`, `ativado_em`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    ");
+
     // Tabelas criadas antes do historico de acessos
     if (!$pdo->query("SHOW COLUMNS FROM hotspot_logins LIKE 'encerrado_em'")->fetch()) {
         $pdo->exec("ALTER TABLE hotspot_logins

@@ -155,6 +155,7 @@ $adminNome = $_SESSION['admin_nome'] ?? 'Admin';
                 </svg>
                 <span>Leads</span>
             </a>
+            <a href="posvenda.php" class="nav-item"><i class="fa-solid fa-headset w-5 text-center"></i><span>Pós-venda</span></a>
             <a href="rede.php" class="nav-item">
                 <i class="fa-solid fa-network-wired w-5 text-center"></i>
                 <span>Rede</span>
@@ -459,7 +460,13 @@ $adminNome = $_SESSION['admin_nome'] ?? 'Admin';
     }
 
     async function deleteLead(id, nome) {
-        if (!confirm('Excluir o lead "' + nome + '"? Esta acao nao pode ser desfeita.')) return;
+        const ok = await SN.confirm({
+            title: 'Excluir lead',
+            message: 'Excluir o lead "' + nome + '"? Esta ação não pode ser desfeita.',
+            confirmText: 'Excluir',
+            tone: 'danger',
+        });
+        if (!ok) return;
         const fd = new FormData();
         fd.append('action', 'delete');
         fd.append('id', id);
@@ -474,11 +481,12 @@ $adminNome = $_SESSION['admin_nome'] ?? 'Admin';
                     card.style.transform = 'scale(0.9)';
                     setTimeout(() => card.remove(), 400);
                 }
+                SN.toast('Lead excluído.');
             } else {
-                alert('Erro ao excluir: ' + (data.message || 'Tente novamente.'));
+                SN.toast('Erro ao excluir: ' + (data.message || 'Tente novamente.'), 'error');
             }
         } catch (e) {
-            alert('Erro de comunicacao.');
+            SN.toast('Erro de comunicação.', 'error');
         }
     }
 
@@ -491,6 +499,7 @@ $adminNome = $_SESSION['admin_nome'] ?? 'Admin';
         if (e.target === this) closeModal();
     });
     </script>
+    <script src="assets/ui.js" defer></script>
     <script src="assets/alertas.js" defer></script>
 </body>
 </html>

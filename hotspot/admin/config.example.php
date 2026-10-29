@@ -26,3 +26,8 @@ define('ALERT_CRON_TOKEN', '');
 // Opcional: senha inicial do usuario 'admin' criado pelo setup.php.
 // Se ficar vazia, o setup gera uma senha aleatoria e a exibe uma unica vez.
 define('ADMIN_INITIAL_PASSWORD', '');
+
+// Pos-venda: API do SGP (mesmos dados da URA usada em controller.php).
+define('SGP_BASE_URL', 'http://IP_DO_SGP:8000');
+define('SGP_APP',      'SGP');
+define('SGP_TOKEN',    'TROQUE_PELO_TOKEN');

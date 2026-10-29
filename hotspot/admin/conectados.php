@@ -54,6 +54,7 @@ $adminNome = $_SESSION['admin_nome'] ?? 'Admin';
             <a href="dashboard.php" class="nav-item"><i class="fa-solid fa-chart-line w-5 text-center"></i><span>Dashboard</span></a>
             <a href="rede.php" class="nav-item"><i class="fa-solid fa-network-wired w-5 text-center"></i><span>Rede</span></a>
             <a href="leads.php" class="nav-item"><i class="fa-solid fa-users w-5 text-center"></i><span>Leads</span></a>
+            <a href="posvenda.php" class="nav-item"><i class="fa-solid fa-headset w-5 text-center"></i><span>Pós-venda</span></a>
             <a href="conectados.php" class="nav-item active"><i class="fa-solid fa-wifi w-5 text-center"></i><span>Conectados</span></a>
             <a href="historico.php" class="nav-item"><i class="fa-solid fa-clock-rotate-left w-5 text-center"></i><span>Histórico</span></a>
             <a href="alertas.php" class="nav-item"><i class="fa-solid fa-bell w-5 text-center"></i><span>Alertas</span></a>
@@ -275,7 +276,7 @@ $adminNome = $_SESSION['admin_nome'] ?? 'Admin';
     }
 
     async function acao(nome, r, pergunta) {
-        if (!confirm(pergunta)) return;
+        if (!await SN.confirm({ title: 'Confirmar ação', message: pergunta, confirmText: 'Confirmar', tone: 'danger' })) return;
         try {
             const res = await api(nome, { id: r.id });
             aviso(res.success ? '' : res.message);
@@ -319,7 +320,7 @@ $adminNome = $_SESSION['admin_nome'] ?? 'Admin';
     async function removerLimite() {
         const r = limiteAlvo;
         if (!r || !r.limite_id) return;
-        if (!confirm('Remover o limite de velocidade de ' + r.ip + '?')) return;
+        if (!await SN.confirm({ title: 'Remover limite', message: 'Remover o limite de velocidade de ' + r.ip + '?', confirmText: 'Remover', tone: 'danger' })) return;
         const btn = $('limiteRemover'); btn.disabled = true;
         try {
             const res = await api('unlimit', { id: r.limite_id });
@@ -330,11 +331,7 @@ $adminNome = $_SESSION['admin_nome'] ?? 'Admin';
         carregar();
     }
 
-    function toast(msg) {
-        const t = el('div', '', msg);
-        t.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:60;padding:12px 18px;border-radius:12px;font-weight:700;font-size:14px;color:#fff;background:rgba(22,163,74,.9);box-shadow:0 8px 30px rgba(0,0,0,.4)';
-        document.body.append(t); setTimeout(() => t.remove(), 3000);
-    }
+    function toast(msg) { SN.toast(msg); }
 
     document.querySelectorAll('.tab-btn').forEach(b => b.onclick = () => {
         document.querySelectorAll('.tab-btn').forEach(x => x.classList.remove('active'));
@@ -344,7 +341,7 @@ $adminNome = $_SESSION['admin_nome'] ?? 'Admin';
     $('busca').oninput = desenhar;
     if ($('btnTodos')) $('btnTodos').onclick = async () => {
         if (!ativos.length) return;
-        if (!confirm('Desconectar TODOS os ' + ativos.length + ' clientes agora? Todos precisarao fazer login novamente.')) return;
+        if (!await SN.confirm({ title: 'Desconectar todos', message: 'Desconectar TODOS os ' + ativos.length + ' clientes agora? Todos precisarão fazer login novamente.', confirmText: 'Desconectar todos', tone: 'danger' })) return;
         const res = await api('disconnect_all', {});
         aviso(res.success ? '' : res.message);
         if (res.success) toast(res.message);
@@ -355,6 +352,7 @@ $adminNome = $_SESSION['admin_nome'] ?? 'Admin';
     setInterval(carregar, 5000);
     document.addEventListener('visibilitychange', carregar);
     </script>
+    <script src="assets/ui.js" defer></script>
     <script src="assets/alertas.js" defer></script>
 </body>
 </html>

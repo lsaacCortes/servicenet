@@ -86,6 +86,7 @@ $adminNome = $_SESSION['admin_nome'] ?? 'Admin';
                 </svg>
                 <span>Leads</span>
             </a>
+            <a href="posvenda.php" class="nav-item"><i class="fa-solid fa-headset w-5 text-center"></i><span>Pós-venda</span></a>
             <a href="rede.php" class="nav-item">
                 <i class="fa-solid fa-network-wired w-5 text-center"></i>
                 <span>Rede</span>

@@ -104,6 +104,7 @@ $usuarios = $pdo->query("SELECT id, username, nome, perfil, created_at FROM admi
             <a href="dashboard.php" class="nav-item"><i class="fa-solid fa-chart-line w-5 text-center"></i><span>Dashboard</span></a>
             <a href="rede.php" class="nav-item"><i class="fa-solid fa-network-wired w-5 text-center"></i><span>Rede</span></a>
             <a href="leads.php" class="nav-item"><i class="fa-solid fa-users w-5 text-center"></i><span>Leads</span></a>
+            <a href="posvenda.php" class="nav-item"><i class="fa-solid fa-headset w-5 text-center"></i><span>Pós-venda</span></a>
             <a href="conectados.php" class="nav-item"><i class="fa-solid fa-wifi w-5 text-center"></i><span>Conectados</span></a>
             <a href="historico.php" class="nav-item"><i class="fa-solid fa-clock-rotate-left w-5 text-center"></i><span>Histórico</span></a>
             <a href="alertas.php" class="nav-item"><i class="fa-solid fa-bell w-5 text-center"></i><span>Alertas</span></a>
@@ -154,7 +155,7 @@ $usuarios = $pdo->query("SELECT id, username, nome, perfil, created_at FROM admi
                             <td><?= date('d/m/Y', strtotime($u['created_at'])) ?></td>
                             <td class="text-right">
                                 <?php if ((int) $u['id'] !== (int) $_SESSION['admin_id']): ?>
-                                <form method="POST" onsubmit="return confirm('Remover o usuario <?= htmlspecialchars($u['username'], ENT_QUOTES) ?>?')">
+                                <form method="POST" data-confirm="Remover o usuário <?= htmlspecialchars($u['username'], ENT_QUOTES) ?>? Ele perderá o acesso ao painel." data-confirm-title="Remover usuário" data-confirm-text="Remover">
                                     <input type="hidden" name="csrf" value="<?= htmlspecialchars($_SESSION['csrf']) ?>">
                                     <input type="hidden" name="acao" value="remover">
                                     <input type="hidden" name="id" value="<?= (int) $u['id'] ?>">
@@ -183,6 +184,7 @@ $usuarios = $pdo->query("SELECT id, username, nome, perfil, created_at FROM admi
             </form>
         <?php endif; ?>
     </main>
+    <script src="assets/ui.js" defer></script>
     <script src="assets/alertas.js" defer></script>
 </body>
 </html>

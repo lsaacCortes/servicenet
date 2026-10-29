@@ -265,3 +265,63 @@
 }
 .btn-sair:hover { background: rgba(255, 76, 48, 0.3); color: #fff; }
 @media (max-width: 480px) { .btn-sair span { display: none; } }
+
+/* ---- Dialogos e avisos proprios (assets/ui.js) ---- */
+.sn-backdrop {
+    position: fixed; inset: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: center; padding: 16px;
+    background: rgba(5, 10, 22, 0.72); backdrop-filter: blur(8px);
+    opacity: 0; transition: opacity .18s ease;
+}
+.sn-backdrop.sn-show { opacity: 1; }
+.sn-dialog {
+    width: 100%; max-width: 400px; text-align: center;
+    padding: 28px 24px 22px; border-radius: 20px;
+    background: rgba(20, 30, 55, 0.97);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
+    transform: translateY(10px) scale(.97); transition: transform .18s ease;
+}
+.sn-show .sn-dialog { transform: none; }
+.sn-dialog-icon {
+    width: 56px; height: 56px; margin: 0 auto 14px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; font-size: 24px;
+    background: rgba(255, 255, 255, 0.08); color: #fff;
+}
+.sn-tone-danger  .sn-dialog-icon { background: rgba(255, 76, 48, 0.18); color: #ff7a61; }
+.sn-tone-warning .sn-dialog-icon { background: rgba(251, 191, 36, 0.18); color: #fde68a; }
+.sn-tone-primary .sn-dialog-icon { background: rgba(255, 76, 48, 0.15); color: #ff7a61; }
+.sn-tone-info    .sn-dialog-icon { background: rgba(96, 165, 250, 0.18); color: #93c5fd; }
+.sn-tone-error   .sn-dialog-icon { background: rgba(255, 76, 48, 0.18); color: #ff7a61; }
+.sn-tone-success .sn-dialog-icon { background: rgba(34, 197, 94, 0.18); color: #86efac; }
+.sn-dialog-title { color: #fff; font-weight: 800; font-size: 1.1rem; margin-bottom: 6px; }
+.sn-dialog-msg { color: rgba(255, 255, 255, 0.6); font-size: .875rem; line-height: 1.5; margin-bottom: 22px; }
+.sn-dialog-actions { display: flex; gap: 10px; }
+.sn-btn {
+    flex: 1; padding: 11px 14px; border-radius: 12px; font-size: .875rem; font-weight: 700;
+    color: #fff; cursor: pointer; border: 1px solid transparent; transition: all .2s ease;
+}
+.sn-btn:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.sn-btn-ghost { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.18); }
+.sn-btn-ghost:hover { background: rgba(255, 255, 255, 0.15); }
+.sn-btn-primary { background: linear-gradient(135deg, #ff4c30, #e63825); }
+.sn-btn-primary:hover { filter: brightness(1.1); }
+.sn-btn-danger { background: rgba(255, 76, 48, 0.25); border-color: rgba(255, 76, 48, 0.6); color: #ffb4a6; }
+.sn-btn-danger:hover { background: #ff4c30; color: #fff; }
+
+.sn-toasts {
+    position: fixed; right: 20px; bottom: 20px; z-index: 110;
+    display: flex; flex-direction: column; gap: 10px; align-items: flex-end; pointer-events: none;
+}
+.sn-toast {
+    display: flex; align-items: center; gap: 10px; max-width: min(360px, calc(100vw - 40px));
+    padding: 12px 16px; border-radius: 14px; font-size: .85rem; font-weight: 600; color: #fff;
+    background: rgba(20, 30, 55, 0.96); border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 10px 35px rgba(0, 0, 0, 0.5);
+    opacity: 0; transform: translateY(8px); transition: all .22s ease;
+}
+.sn-toast.sn-show { opacity: 1; transform: none; }
+.sn-toast-success i { color: #4ade80; }
+.sn-toast-error   { border-color: rgba(255, 76, 48, 0.5); }
+.sn-toast-error i { color: #ff7a61; }
+.sn-toast-info i  { color: #93c5fd; }
