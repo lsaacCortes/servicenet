@@ -55,14 +55,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="assets/admin.css">
+    <link rel="stylesheet" href="assets/admin.css?v=<?= filemtime(__DIR__ . '/assets/admin.css') ?>">
+    <link rel="stylesheet" href="assets/theme.css?v=<?= filemtime(__DIR__ . '/assets/theme.css') ?>">
+    <script src="assets/theme.js?v=<?= filemtime(__DIR__ . '/assets/theme.js') ?>"></script>
     <style>
         .glass-input {
-            background: rgba(255,255,255,0.08);
-            border: 1px solid rgba(255,255,255,0.2);
-            color: white;
+            background: var(--w08);
+            border: 1px solid var(--w20);
+            color: var(--text);
         }
-        .glass-input::placeholder { color: rgba(255,255,255,0.35); }
+        .glass-input::placeholder { color: var(--w35); }
         .glass-input:focus { outline: none; border-color: #ff4c30; box-shadow: 0 0 0 3px rgba(255,76,48,0.25); }
         .btn-accent { background: linear-gradient(135deg, #ff4c30, #e63825); box-shadow: 0 4px 20px rgba(255,76,48,0.4); }
     </style>
@@ -156,21 +158,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <input type="hidden" name="csrf" value="<?= htmlspecialchars($_SESSION['csrf']) ?>">
 
                 <div>
-                    <label class="block text-sm font-semibold mb-1.5" style="color: rgba(255,255,255,0.75);" for="atual">
+                    <label class="block text-sm font-semibold mb-1.5" style="color: var(--w75);" for="atual">
                         <i class="fa-solid fa-lock mr-1.5 opacity-70"></i>Senha atual
                     </label>
                     <input class="glass-input w-full py-3 px-4 rounded-xl text-sm" type="password" id="atual" name="atual"
                            required autocomplete="current-password">
                 </div>
                 <div>
-                    <label class="block text-sm font-semibold mb-1.5" style="color: rgba(255,255,255,0.75);" for="nova">
+                    <label class="block text-sm font-semibold mb-1.5" style="color: var(--w75);" for="nova">
                         <i class="fa-solid fa-key mr-1.5 opacity-70"></i>Nova senha
                     </label>
                     <input class="glass-input w-full py-3 px-4 rounded-xl text-sm" type="password" id="nova" name="nova"
                            required minlength="8" placeholder="Minimo de 8 caracteres" autocomplete="new-password">
                 </div>
                 <div>
-                    <label class="block text-sm font-semibold mb-1.5" style="color: rgba(255,255,255,0.75);" for="confirma">
+                    <label class="block text-sm font-semibold mb-1.5" style="color: var(--w75);" for="confirma">
                         <i class="fa-solid fa-check-double mr-1.5 opacity-70"></i>Confirmar nova senha
                     </label>
                     <input class="glass-input w-full py-3 px-4 rounded-xl text-sm" type="password" id="confirma" name="confirma"

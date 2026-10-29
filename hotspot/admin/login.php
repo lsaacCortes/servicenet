@@ -57,6 +57,8 @@ if (isset($_SESSION['admin_id'])) {
     <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="assets/theme.css?v=<?= filemtime(__DIR__ . '/assets/theme.css') ?>">
+    <script src="assets/theme.js?v=<?= filemtime(__DIR__ . '/assets/theme.js') ?>"></script>
     <style>
         * { font-family: 'Raleway', sans-serif; }
         :root { --primary: #172a4c; --accent: #ff4c30; }
@@ -83,11 +85,11 @@ if (isset($_SESSION['admin_id'])) {
         }
 
         .glass-card {
-            background: rgba(255, 255, 255, 0.07);
+            background: var(--w07);
             backdrop-filter: blur(24px) saturate(180%);
             -webkit-backdrop-filter: blur(24px) saturate(180%);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1);
+            border: 1px solid var(--w15);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 var(--w10);
         }
 
         .logo-bordered {
@@ -101,16 +103,16 @@ if (isset($_SESSION['admin_id'])) {
         }
 
         .glass-input {
-            background: rgba(255,255,255,0.08);
-            border: 1px solid rgba(255,255,255,0.2);
-            color: white;
+            background: var(--w08);
+            border: 1px solid var(--w20);
+            color: var(--text);
             backdrop-filter: blur(8px);
             transition: all 0.3s ease;
         }
-        .glass-input::placeholder { color: rgba(255,255,255,0.4); }
+        .glass-input::placeholder { color: var(--w40); }
         .glass-input:focus {
             outline: none;
-            background: rgba(255,255,255,0.12);
+            background: var(--w12);
             border-color: var(--accent);
             box-shadow: 0 0 0 3px rgba(255,76,48,0.25);
         }
@@ -123,12 +125,12 @@ if (isset($_SESSION['admin_id'])) {
         .btn-accent:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(255,76,48,0.6); }
         .btn-accent:active { transform: translateY(0); }
 
-        .label-text { color: rgba(255,255,255,0.75); }
+        .label-text { color: var(--w75); }
 
         input:-webkit-autofill,
         input:-webkit-autofill:focus {
-            -webkit-box-shadow: 0 0 0 30px rgba(23,42,76,0.9) inset !important;
-            -webkit-text-fill-color: white !important;
+            -webkit-box-shadow: 0 0 0 30px var(--autofill) inset !important;
+            -webkit-text-fill-color: var(--text) !important;
         }
 
         @keyframes fadeInUp {
@@ -157,7 +159,7 @@ if (isset($_SESSION['admin_id'])) {
                          onerror="this.outerHTML='<div class=\'text-2xl font-extrabold text-white border-2 border-white rounded-xl px-4 py-2\'>ServiceNet</div>'">
                 </div>
                 <h1 class="text-2xl font-bold text-white mb-1">Painel de Gestao</h1>
-                <p class="text-sm" style="color: rgba(255,255,255,0.5);">
+                <p class="text-sm" style="color: var(--w50);">
                     <i class="fa-solid fa-shield-halved mr-1"></i>
                     Acesso restrito — ServiceNet Telecom
                 </p>
@@ -204,7 +206,7 @@ if (isset($_SESSION['admin_id'])) {
         </div>
 
         <div class="px-10 pb-6 text-center">
-            <p class="text-xs" style="color: rgba(255,255,255,0.3);">
+            <p class="text-xs" style="color: var(--w30);">
                 <i class="fa-solid fa-code mr-1"></i>
                 Desenvolvido por CortesWeb &copy; <?= date('Y') ?>
             </p>

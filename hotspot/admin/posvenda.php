@@ -25,59 +25,61 @@ $atendente = trim(explode(' ', trim($adminNome))[0]);
     <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="assets/admin.css">
+    <link rel="stylesheet" href="assets/admin.css?v=<?= filemtime(__DIR__ . '/assets/admin.css') ?>">
+    <link rel="stylesheet" href="assets/theme.css?v=<?= filemtime(__DIR__ . '/assets/theme.css') ?>">
+    <script src="assets/theme.js?v=<?= filemtime(__DIR__ . '/assets/theme.js') ?>"></script>
     <style>
-        .tab-btn { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.15); color: rgba(255,255,255,0.7); transition: all .2s; }
-        .tab-btn:hover, .tab-btn.active { background: rgba(255,76,48,0.25); border-color: rgba(255,76,48,0.5); color: #fff; }
-        .tab-btn .cnt { margin-left: 6px; padding: 1px 7px; border-radius: 999px; font-size: 11px; background: rgba(255,255,255,0.12); }
-        .tab-btn.active .cnt { background: rgba(255,255,255,0.25); }
-        .tab-btn.tab-prio .cnt { background: rgba(255,76,48,0.35); color: #fff; }
-        .search-input { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #fff; }
-        .search-input::placeholder { color: rgba(255,255,255,0.35); }
+        .tab-btn { background: var(--w07); border: 1px solid var(--w15); color: var(--w70); transition: all .2s; }
+        .tab-btn:hover, .tab-btn.active { background: rgba(255,76,48,0.25); border-color: rgba(255,76,48,0.5); color: var(--text); }
+        .tab-btn .cnt { margin-left: 6px; padding: 1px 7px; border-radius: 999px; font-size: 11px; background: var(--w12); }
+        .tab-btn.active .cnt { background: var(--w25); }
+        .tab-btn.tab-prio .cnt { background: rgba(255,76,48,0.35); color: var(--text); }
+        .search-input { background: var(--w08); border: 1px solid var(--w15); color: var(--text); }
+        .search-input::placeholder { color: var(--w35); }
         .search-input:focus { outline: none; border-color: #ff4c30; }
 
         .pv-row {
             display: grid; grid-template-columns: minmax(0,2.2fr) minmax(0,1.3fr) minmax(0,1.5fr) auto auto;
             align-items: center; gap: 16px; padding: 14px 18px; position: relative;
-            background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+            background: var(--w06); border: 1px solid var(--w10);
             border-radius: 16px; transition: border-color .2s, background .2s;
         }
-        .pv-row:hover { background: rgba(255,255,255,0.09); border-color: rgba(255,255,255,0.2); }
-        .pv-row.prio { border-left: 4px solid #ff4c30; background: linear-gradient(90deg, rgba(255,76,48,0.10), rgba(255,255,255,0.05) 40%); }
+        .pv-row:hover { background: var(--w09); border-color: var(--w20); }
+        .pv-row.prio { border-left: 4px solid #ff4c30; background: linear-gradient(90deg, rgba(255,76,48,0.10), var(--w05) 40%); }
         .pv-avatar { width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
             color: #fff; font-weight: 700; background: linear-gradient(135deg, #172a4c, #ff4c30); }
-        .pv-muted { color: rgba(255,255,255,0.5); font-size: 12px; }
-        .pv-bar { height: 4px; border-radius: 4px; background: rgba(255,255,255,0.12); overflow: hidden; margin-top: 6px; max-width: 140px; }
+        .pv-muted { color: var(--w50); font-size: 12px; }
+        .pv-bar { height: 4px; border-radius: 4px; background: var(--w12); overflow: hidden; margin-top: 6px; max-width: 140px; }
         .pv-bar > span { display: block; height: 100%; background: linear-gradient(90deg, #60a5fa, #ff4c30); }
 
         .badge-aguardando   { background: rgba(96,165,250,0.18); color: #bfdbfe; border: 1px solid rgba(96,165,250,0.4); }
-        .badge-pendente     { background: rgba(251,191,36,0.2);  color: #fde68a; border: 1px solid rgba(251,191,36,0.4); }
+        .badge-pendente     { background: rgba(251,191,36,0.2);  color: var(--yellow-t); border: 1px solid rgba(251,191,36,0.4); }
         .badge-sem_resposta { background: rgba(148,163,184,0.2); color: #cbd5e1; border: 1px solid rgba(148,163,184,0.4); }
-        .badge-concluido    { background: rgba(34,197,94,0.2);   color: #86efac; border: 1px solid rgba(34,197,94,0.4); }
+        .badge-concluido    { background: rgba(34,197,94,0.2);   color: var(--green-t); border: 1px solid rgba(34,197,94,0.4); }
         .tag-prio { display: inline-flex; align-items: center; gap: 5px; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 700;
             background: #ff4c30; color: #fff; letter-spacing: .03em; }
 
         .pv-act { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 14px; border-radius: 12px;
             font-size: 12px; font-weight: 700; transition: all .2s; white-space: nowrap; cursor: pointer; }
-        .pv-wa { background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.3); color: #4ade80; }
+        .pv-wa { background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.3); color: var(--green); }
         .pv-wa:hover { background: rgba(34,197,94,0.28); }
         .pv-wa.off { opacity: .35; pointer-events: none; }
-        .pv-reg { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.18); color: #fff; }
-        .pv-reg:hover { background: rgba(255,255,255,0.18); }
+        .pv-reg { background: var(--w10); border: 1px solid var(--w18); color: var(--text); }
+        .pv-reg:hover { background: var(--w18); }
 
-        .page-btn { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #fff; transition: all .2s; }
+        .page-btn { background: var(--w08); border: 1px solid var(--w15); color: var(--text); transition: all .2s; }
         .page-btn:hover, .page-btn.active { background: rgba(255,76,48,0.35); border-color: #ff4c30; }
         .page-btn:disabled { opacity: .3; cursor: not-allowed; }
 
-        .modal-backdrop { background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); }
-        .modal-box { background: rgba(20,30,55,0.97); border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 25px 60px rgba(0,0,0,0.6); }
-        .modal-input { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); color: #fff; }
+        .modal-backdrop { background: var(--backdrop); backdrop-filter: blur(8px); }
+        .modal-box { background: var(--surface); border: 1px solid var(--w15); box-shadow: 0 25px 60px rgba(0,0,0,0.6); }
+        .modal-input { background: var(--w08); border: 1px solid var(--w20); color: var(--text); }
         .modal-input:focus { outline: none; border-color: #ff4c30; }
-        .modal-input::placeholder { color: rgba(255,255,255,0.3); }
-        select.modal-input option { background: #1a2744; color: #fff; }
-        .lbl { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: rgba(255,255,255,0.7); }
+        .modal-input::placeholder { color: var(--w30); }
+        select.modal-input option { background: var(--option-bg); color: var(--text); }
+        .lbl { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--w70); }
 
-        .skeleton { height: 70px; border-radius: 16px; background: linear-gradient(90deg, rgba(255,255,255,.05), rgba(255,255,255,.1), rgba(255,255,255,.05)); background-size: 200% 100%; animation: sk 1.2s infinite; }
+        .skeleton { height: 70px; border-radius: 16px; background: linear-gradient(90deg, var(--w05), var(--w10), var(--w05)); background-size: 200% 100%; animation: sk 1.2s infinite; }
         @keyframes sk { to { background-position: -200% 0; } }
         .spin { animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -196,7 +198,7 @@ $atendente = trim(explode(' ', trim($adminNome))[0]);
                               class="modal-input w-full py-2.5 px-3 rounded-xl text-sm resize-none"></textarea>
                 </div>
             </div>
-            <p id="mErro" class="text-xs font-semibold mt-3 hidden" style="color:#ff7a61;"></p>
+            <p id="mErro" class="text-xs font-semibold mt-3 hidden" style="color:var(--coral);"></p>
             <div class="flex gap-3 mt-6">
                 <button id="mCancel" class="sn-btn sn-btn-ghost">Cancelar</button>
                 <button id="mSalvar" class="sn-btn sn-btn-primary">Salvar</button>
@@ -335,7 +337,7 @@ $atendente = trim(explode(' ', trim($adminNome))[0]);
             c3.append(el('p', 'pv-muted', (RESULTADOS[r.resultado] || 'Concluído') + ' · ' + dataBR(r.concluido_em)));
         } else if (r.dias >= DIAS_ALVO) {
             const p = el('p', 'text-xs font-bold', r.dias === DIAS_ALVO ? 'Completou 7 dias hoje' : r.dias + ' dias de ativação');
-            p.style.color = '#ff7a61'; c3.append(p);
+            p.style.color = 'var(--coral)'; c3.append(p);
         } else {
             c3.append(el('p', 'pv-muted', 'Dia ' + r.dias + ' de ' + DIAS_ALVO));
             const b = el('div', 'pv-bar'); const s = el('span'); s.style.width = Math.max(4, r.dias / DIAS_ALVO * 100) + '%'; b.append(s); c3.append(b);
@@ -456,7 +458,7 @@ $atendente = trim(explode(' ', trim($adminNome))[0]);
 
     carregar().then(() => sincronizar(true));
     </script>
-    <script src="assets/ui.js" defer></script>
+    <script src="assets/ui.js?v=<?= filemtime(__DIR__ . '/assets/ui.js') ?>" defer></script>
     <script src="assets/alertas.js" defer></script>
 </body>
 </html>

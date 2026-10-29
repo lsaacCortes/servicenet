@@ -19,25 +19,27 @@ $adminNome = $_SESSION['admin_nome'] ?? 'Admin';
     <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="assets/admin.css">
+    <link rel="stylesheet" href="assets/admin.css?v=<?= filemtime(__DIR__ . '/assets/admin.css') ?>">
+    <link rel="stylesheet" href="assets/theme.css?v=<?= filemtime(__DIR__ . '/assets/theme.css') ?>">
+    <script src="assets/theme.js?v=<?= filemtime(__DIR__ . '/assets/theme.js') ?>"></script>
     <style>
-        .tab-btn { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.15); color: rgba(255,255,255,0.7); transition: all .2s; }
-        .tab-btn:hover, .tab-btn.active { background: rgba(255,76,48,0.25); border-color: rgba(255,76,48,0.5); color: #fff; }
-        .search-input { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #fff; }
-        .search-input::placeholder { color: rgba(255,255,255,0.35); }
+        .tab-btn { background: var(--w07); border: 1px solid var(--w15); color: var(--w70); transition: all .2s; }
+        .tab-btn:hover, .tab-btn.active { background: rgba(255,76,48,0.25); border-color: rgba(255,76,48,0.5); color: var(--text); }
+        .search-input { background: var(--w08); border: 1px solid var(--w15); color: var(--text); }
+        .search-input::placeholder { color: var(--w35); }
         .search-input:focus { outline: none; border-color: #ff4c30; }
-        .tbl { width: 100%; border-collapse: collapse; color: rgba(255,255,255,0.85); font-size: 0.875rem; }
-        .tbl th { text-align: left; font-size: 0.7rem; text-transform: uppercase; letter-spacing: .05em; color: rgba(255,255,255,0.45); padding: .6rem .75rem; white-space: nowrap; }
-        .tbl td { padding: .65rem .75rem; border-top: 1px solid rgba(255,255,255,0.08); white-space: nowrap; }
-        .tbl tr:hover td { background: rgba(255,255,255,0.04); }
+        .tbl { width: 100%; border-collapse: collapse; color: var(--w85); font-size: 0.875rem; }
+        .tbl th { text-align: left; font-size: 0.7rem; text-transform: uppercase; letter-spacing: .05em; color: var(--w45); padding: .6rem .75rem; white-space: nowrap; }
+        .tbl td { padding: .65rem .75rem; border-top: 1px solid var(--w08); white-space: nowrap; }
+        .tbl tr:hover td { background: var(--w04); }
         .act-btn { padding: .35rem .7rem; border-radius: .6rem; font-size: .75rem; font-weight: 700; transition: all .2s; }
-        .act-warn { background: rgba(251,191,36,0.15); border: 1px solid rgba(251,191,36,0.35); color: #fde68a; }
+        .act-warn { background: rgba(251,191,36,0.15); border: 1px solid rgba(251,191,36,0.35); color: var(--yellow-t); }
         .act-warn:hover { background: rgba(251,191,36,0.3); }
-        .act-danger { background: rgba(255,76,48,0.15); border: 1px solid rgba(255,76,48,0.35); color: #ff7a61; }
+        .act-danger { background: rgba(255,76,48,0.15); border: 1px solid rgba(255,76,48,0.35); color: var(--coral); }
         .act-danger:hover { background: rgba(255,76,48,0.3); }
-        .act-ok { background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.35); color: #86efac; }
+        .act-ok { background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.35); color: var(--green-t); }
         .act-ok:hover { background: rgba(34,197,94,0.3); }
-        .idle-alto { color: #fde68a; font-weight: 700; }
+        .idle-alto { color: var(--yellow-t); font-weight: 700; }
         .dot { width: 8px; height: 8px; border-radius: 50%; background: #4ade80; display: inline-block; }
         .dot.off { background: #ff7a61; }
     </style>
@@ -85,7 +87,7 @@ $adminNome = $_SESSION['admin_nome'] ?? 'Admin';
             </div>
         </header>
 
-        <div id="aviso" class="hidden mt-6 p-4 rounded-2xl text-sm font-semibold" style="background: rgba(255,76,48,0.15); border: 1px solid rgba(255,76,48,0.4); color: #ffb3a5;"></div>
+        <div id="aviso" class="hidden mt-6 p-4 rounded-2xl text-sm font-semibold" style="background: rgba(255,76,48,0.15); border: 1px solid rgba(255,76,48,0.4); color: var(--coral-soft);"></div>
 
         <div class="glass-card rounded-2xl p-4 mt-6 flex flex-wrap gap-3 items-center">
             <button class="tab-btn active px-4 py-2 rounded-xl text-sm font-semibold" data-tab="ativos">Conectados <span id="cntAtivos"></span></button>
@@ -105,26 +107,26 @@ $adminNome = $_SESSION['admin_nome'] ?? 'Admin';
         </div>
     </main>
 
-    <div id="limiteModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4" style="background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);">
-        <div class="rounded-2xl w-full max-w-sm p-6" style="background: rgba(20,30,55,0.95); border: 1px solid rgba(255,255,255,0.15);">
+    <div id="limiteModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4" style="background: var(--backdrop); backdrop-filter: blur(8px);">
+        <div class="rounded-2xl w-full max-w-sm p-6" style="background: var(--surface); border: 1px solid var(--w15);">
             <h3 id="limiteTitulo" class="text-white font-bold text-lg mb-1">Limitar velocidade</h3>
-            <p id="limiteQuem" class="text-sm mb-1" style="color: rgba(255,255,255,0.5);"></p>
-            <p id="limiteAtual" class="hidden text-sm font-semibold mb-3" style="color: #fde68a;"></p>
-            <label class="block text-sm font-semibold mb-1.5" style="color: rgba(255,255,255,0.7);">Velocidade máxima (download e upload)</label>
-            <select id="limiteVel" class="w-full py-2.5 px-3 rounded-xl text-sm text-white" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2);">
+            <p id="limiteQuem" class="text-sm mb-1" style="color: var(--w50);"></p>
+            <p id="limiteAtual" class="hidden text-sm font-semibold mb-3" style="color: var(--yellow-t);"></p>
+            <label class="block text-sm font-semibold mb-1.5" style="color: var(--w70);">Velocidade máxima (download e upload)</label>
+            <select id="limiteVel" class="w-full py-2.5 px-3 rounded-xl text-sm text-white" style="background: var(--w08); border: 1px solid var(--w20);">
                 <option value="512" style="color:#000">512 Kbps</option>
                 <option value="1024" style="color:#000">1 Mbps</option>
                 <option value="2048" selected style="color:#000">2 Mbps</option>
                 <option value="5120" style="color:#000">5 Mbps</option>
                 <option value="10240" style="color:#000">10 Mbps</option>
             </select>
-            <p class="text-xs mt-3" style="color: rgba(255,255,255,0.45);">O limite vale enquanto o cliente estiver conectado. Se ele for desconectado ou sair, é removido.</p>
+            <p class="text-xs mt-3" style="color: var(--w45);">O limite vale enquanto o cliente estiver conectado. Se ele for desconectado ou sair, é removido.</p>
             <button id="limiteRemover" onclick="removerLimite()" class="hidden w-full mt-4 py-2 rounded-xl text-sm font-bold"
-                    style="background: rgba(255,76,48,0.15); border: 1px solid rgba(255,76,48,0.35); color: #ff7a61;">
+                    style="background: rgba(255,76,48,0.15); border: 1px solid rgba(255,76,48,0.35); color: var(--coral);">
                 <i class="fa-solid fa-gauge-high"></i> Remover limite (voltar à velocidade normal)
             </button>
             <div class="flex gap-3 mt-3">
-                <button onclick="fecharLimite()" class="flex-1 py-2.5 rounded-xl text-sm font-bold text-white" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);">Cancelar</button>
+                <button onclick="fecharLimite()" class="flex-1 py-2.5 rounded-xl text-sm font-bold text-white" style="background: var(--w10); border: 1px solid var(--w20);">Cancelar</button>
                 <button id="limiteOk" onclick="aplicarLimite()" class="flex-1 py-2.5 rounded-xl text-sm font-bold text-white" style="background: linear-gradient(135deg, #ff4c30, #e63825);">Aplicar</button>
             </div>
         </div>
@@ -352,7 +354,7 @@ $adminNome = $_SESSION['admin_nome'] ?? 'Admin';
     setInterval(carregar, 5000);
     document.addEventListener('visibilitychange', carregar);
     </script>
-    <script src="assets/ui.js" defer></script>
+    <script src="assets/ui.js?v=<?= filemtime(__DIR__ . '/assets/ui.js') ?>" defer></script>
     <script src="assets/alertas.js" defer></script>
 </body>
 </html>

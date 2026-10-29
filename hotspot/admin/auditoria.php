@@ -63,17 +63,19 @@ $qs = http_build_query(['quem' => $quem, 'acao' => $acao, 'de' => $de, 'ate' => 
     <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="assets/admin.css">
+    <link rel="stylesheet" href="assets/admin.css?v=<?= filemtime(__DIR__ . '/assets/admin.css') ?>">
+    <link rel="stylesheet" href="assets/theme.css?v=<?= filemtime(__DIR__ . '/assets/theme.css') ?>">
+    <script src="assets/theme.js?v=<?= filemtime(__DIR__ . '/assets/theme.js') ?>"></script>
     <style>
-        .glass-input { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #fff; }
+        .glass-input { background: var(--w08); border: 1px solid var(--w15); color: var(--text); }
         .glass-input:focus { outline: none; border-color: #ff4c30; }
-        select.glass-input option { background: #1a2744; color: white; }
+        select.glass-input option { background: var(--option-bg); color: var(--text); }
         input[type=date] { color-scheme: dark; }
-        .tbl { width: 100%; border-collapse: collapse; color: rgba(255,255,255,0.85); font-size: 0.875rem; }
-        .tbl th { text-align: left; font-size: 0.7rem; text-transform: uppercase; letter-spacing: .05em; color: rgba(255,255,255,0.45); padding: .6rem .75rem; white-space: nowrap; }
-        .tbl td { padding: .6rem .75rem; border-top: 1px solid rgba(255,255,255,0.08); white-space: nowrap; }
-        .tbl tr:hover td { background: rgba(255,255,255,0.04); }
-        .page-btn { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: white; transition: all .2s; }
+        .tbl { width: 100%; border-collapse: collapse; color: var(--w85); font-size: 0.875rem; }
+        .tbl th { text-align: left; font-size: 0.7rem; text-transform: uppercase; letter-spacing: .05em; color: var(--w45); padding: .6rem .75rem; white-space: nowrap; }
+        .tbl td { padding: .6rem .75rem; border-top: 1px solid var(--w08); white-space: nowrap; }
+        .tbl tr:hover td { background: var(--w04); }
+        .page-btn { background: var(--w08); border: 1px solid var(--w15); color: var(--text); transition: all .2s; }
         .page-btn:hover { background: rgba(255,76,48,0.35); border-color: #ff4c30; }
     </style>
 </head>
@@ -146,7 +148,7 @@ $qs = http_build_query(['quem' => $quem, 'acao' => $acao, 'de' => $de, 'ate' => 
             </div>
             <button class="px-5 py-2.5 rounded-xl text-sm font-bold text-white" style="background: linear-gradient(135deg, #ff4c30, #e63825);"><i class="fa-solid fa-magnifying-glass"></i> Filtrar</button>
             <?php if ($quem !== '' || $acao !== '' || $de !== '' || $ate !== ''): ?>
-                <a href="auditoria.php" class="px-4 py-2.5 rounded-xl text-sm font-bold text-white" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);">Limpar</a>
+                <a href="auditoria.php" class="px-4 py-2.5 rounded-xl text-sm font-bold text-white" style="background: var(--w10); border: 1px solid var(--w20);">Limpar</a>
             <?php endif; ?>
         </form>
 

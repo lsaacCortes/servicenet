@@ -1,0 +1,131 @@
+/* ====================================================
+   ServiceNet Admin — Temas (escuro / claro)
+   Identidade: azul #172a4c + laranja #ff4c30, fonte Raleway.
+   Os outros CSS/paginas usam apenas estas variaveis; para ajustar
+   uma cor de um tema, altere aqui.
+   ==================================================== */
+
+/* ---- Escuro (padrao) ---- */
+:root {
+    color-scheme: dark;
+
+    --text: #fff;
+    --surface: rgba(20, 30, 55, 0.96);
+    --option-bg: #1a2744;
+    --backdrop: rgba(0, 0, 0, 0.7);
+    --autofill: rgba(23, 42, 76, 0.9);
+
+    /* camadas translucidas (fundos, bordas e textos secundarios) */
+    --w04: rgba(255,255,255,0.04); --w05: rgba(255,255,255,0.05); --w06: rgba(255,255,255,0.06);
+    --w07: rgba(255,255,255,0.07); --w08: rgba(255,255,255,0.08); --w09: rgba(255,255,255,0.09);
+    --w10: rgba(255,255,255,0.10); --w12: rgba(255,255,255,0.12); --w15: rgba(255,255,255,0.15);
+    --w18: rgba(255,255,255,0.18); --w20: rgba(255,255,255,0.20); --w25: rgba(255,255,255,0.25);
+    --w30: rgba(255,255,255,0.30); --w35: rgba(255,255,255,0.35); --w40: rgba(255,255,255,0.40);
+    --w45: rgba(255,255,255,0.45); --w50: rgba(255,255,255,0.50); --w55: rgba(255,255,255,0.55);
+    --w60: rgba(255,255,255,0.60); --w70: rgba(255,255,255,0.70); --w75: rgba(255,255,255,0.75);
+    --w80: rgba(255,255,255,0.80); --w85: rgba(255,255,255,0.85);
+
+    /* cores de apoio (texto/icones coloridos) */
+    --coral: #ff7a61;      --coral-soft: #ffb3a5;
+    --green: #4ade80;      --green-t: #86efac;
+    --amber: #fbbf24;      --yellow-t: #fde68a;
+    --blue: #60a5fa;       --blue-t: #93c5fd;
+    --purple: #c084fc;     --purple-t: #d8b4fe;
+    --red-t: #fca5a5;
+}
+
+/* ---- Claro ---- */
+:root[data-theme="light"] {
+    color-scheme: light;
+
+    --text: #172a4c;
+    --surface: #ffffff;
+    --option-bg: #ffffff;
+    --backdrop: rgba(23, 42, 76, 0.45);
+    --autofill: #f1f5fb;
+
+    --w04: rgba(23,42,76,0.03); --w05: rgba(23,42,76,0.04); --w06: rgba(23,42,76,0.045);
+    --w07: rgba(23,42,76,0.05); --w08: rgba(23,42,76,0.05); --w09: rgba(23,42,76,0.06);
+    --w10: rgba(23,42,76,0.07); --w12: rgba(23,42,76,0.09); --w15: rgba(23,42,76,0.14);
+    --w18: rgba(23,42,76,0.16); --w20: rgba(23,42,76,0.18); --w25: rgba(23,42,76,0.22);
+    --w30: rgba(23,42,76,0.30); --w35: rgba(23,42,76,0.42); --w40: rgba(23,42,76,0.48);
+    --w45: rgba(23,42,76,0.58); --w50: rgba(23,42,76,0.64); --w55: rgba(23,42,76,0.70);
+    --w60: rgba(23,42,76,0.74); --w70: rgba(23,42,76,0.82); --w75: rgba(23,42,76,0.86);
+    --w80: rgba(23,42,76,0.90); --w85: rgba(23,42,76,0.92);
+
+    --coral: #d62f1a;      --coral-soft: #b3260f;
+    --green: #15803d;      --green-t: #15803d;
+    --amber: #a16207;      --yellow-t: #a16207;
+    --blue: #1d4ed8;       --blue-t: #1d4ed8;
+    --purple: #7e22ce;     --purple-t: #7e22ce;
+    --red-t: #b91c1c;
+}
+
+/* ---- Superficies no claro: fundo branco, cartoes brancos com sombra suave ---- */
+html[data-theme="light"] body,
+html[data-theme="light"] .admin-body {
+    background: linear-gradient(135deg, #ffffff 0%, #f4f7fc 100%);
+    color: var(--text);
+}
+html[data-theme="light"] .orb { opacity: 0.07; }
+
+html[data-theme="light"] .glass-card,
+html[data-theme="light"] .lead-card,
+html[data-theme="light"] .filter-bar {
+    background: #fff;
+    -webkit-backdrop-filter: none; backdrop-filter: none;
+    border: 1px solid rgba(23, 42, 76, 0.10);
+    box-shadow: 0 2px 4px rgba(23, 42, 76, 0.04), 0 8px 24px rgba(23, 42, 76, 0.06);
+}
+html[data-theme="light"] .lead-card:hover {
+    border-color: rgba(255, 76, 48, 0.45);
+    box-shadow: 0 10px 30px rgba(23, 42, 76, 0.12), 0 0 0 1px rgba(255, 76, 48, 0.2);
+}
+html[data-theme="light"] .sidebar {
+    background: #fff;
+    border-right: 1px solid rgba(23, 42, 76, 0.10);
+    box-shadow: 4px 0 24px rgba(23, 42, 76, 0.05);
+}
+html[data-theme="light"] .nav-item.active { background: rgba(255, 76, 48, 0.10); border-color: rgba(255, 76, 48, 0.35); }
+html[data-theme="light"] .logo-bordered { border-color: rgba(23, 42, 76, 0.14); box-shadow: 0 2px 12px rgba(23, 42, 76, 0.12); filter: none; }
+
+/* Dialogos e avisos (ui.js) */
+html[data-theme="light"] .sn-backdrop { background: var(--backdrop); }
+html[data-theme="light"] .sn-dialog,
+html[data-theme="light"] .sn-toast { background: #fff; box-shadow: 0 20px 50px rgba(23, 42, 76, 0.22); border-color: rgba(23, 42, 76, 0.12); }
+html[data-theme="light"] .sn-btn-ghost { color: var(--text); }
+html[data-theme="light"] .sn-btn-danger { color: #b3260f; background: rgba(255, 76, 48, 0.10); }
+html[data-theme="light"] .sn-btn-danger:hover { color: #fff; background: #ff4c30; }
+html[data-theme="light"] .sn-tone-warning .sn-dialog-icon { background: rgba(161, 98, 7, 0.12); }
+html[data-theme="light"] .sn-tone-info .sn-dialog-icon { background: rgba(29, 78, 216, 0.10); }
+html[data-theme="light"] .sn-tone-success .sn-dialog-icon { background: rgba(21, 128, 61, 0.12); }
+
+/* Modais com caixa propria (leads, conectados, pos-venda) */
+html[data-theme="light"] .modal-box,
+html[data-theme="light"] [class*="modal"] > .rounded-2xl { box-shadow: 0 20px 50px rgba(23, 42, 76, 0.22); }
+
+/* Texto branco do Tailwind -> azul da marca; mantem branco sobre fundos de acento */
+html[data-theme="light"] .text-white { color: var(--text); }
+html[data-theme="light"] .text-white[style*="gradient"],
+html[data-theme="light"] .text-white[style*="rgba(255,76,48,0.8)"],
+html[data-theme="light"] .btn-accent,
+html[data-theme="light"] .btn-accent *,
+html[data-theme="light"] .btn-accent.text-white,
+html[data-theme="light"] .bg-accent.text-white,
+html[data-theme="light"] .bg-\[\#ff4c30\].text-white { color: #fff; }
+html[data-theme="light"] .btn-sair:hover { color: var(--text); }
+
+/* Barras de rolagem e inputs nativos */
+html[data-theme="light"] ::-webkit-scrollbar-thumb { background: rgba(23, 42, 76, 0.22); }
+html[data-theme="light"] ::-webkit-scrollbar-thumb:hover { background: rgba(23, 42, 76, 0.38); }
+
+/* ---- Botao de alternar tema ---- */
+.theme-toggle {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 38px; height: 38px; margin-right: 8px; border-radius: 12px; cursor: pointer;
+    color: var(--w80); background: var(--w08); border: 1px solid var(--w15);
+    transition: all .2s ease;
+}
+.theme-toggle:hover { background: rgba(255, 76, 48, 0.18); border-color: rgba(255, 76, 48, 0.5); color: var(--text); }
+.theme-toggle:focus-visible { outline: 2px solid #ff4c30; outline-offset: 2px; }
+.theme-toggle-float { position: fixed; top: 16px; right: 16px; z-index: 120; margin: 0; }

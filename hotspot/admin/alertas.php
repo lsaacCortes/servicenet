@@ -65,14 +65,16 @@ $tipos = ['conectados' => 'Muitos conectados', 'trafego' => 'Alto consumo', 'rot
     <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="assets/admin.css">
+    <link rel="stylesheet" href="assets/admin.css?v=<?= filemtime(__DIR__ . '/assets/admin.css') ?>">
+    <link rel="stylesheet" href="assets/theme.css?v=<?= filemtime(__DIR__ . '/assets/theme.css') ?>">
+    <script src="assets/theme.js?v=<?= filemtime(__DIR__ . '/assets/theme.js') ?>"></script>
     <style>
-        .glass-input { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); color: white; }
+        .glass-input { background: var(--w08); border: 1px solid var(--w20); color: var(--text); }
         .glass-input:focus { outline: none; border-color: #ff4c30; box-shadow: 0 0 0 3px rgba(255,76,48,0.25); }
         .btn-accent { background: linear-gradient(135deg, #ff4c30, #e63825); box-shadow: 0 4px 20px rgba(255,76,48,0.4); }
-        .tbl { width: 100%; border-collapse: collapse; color: rgba(255,255,255,0.85); font-size: 0.875rem; }
-        .tbl th { text-align: left; font-size: 0.7rem; text-transform: uppercase; letter-spacing: .05em; color: rgba(255,255,255,0.45); padding: .6rem .75rem; white-space: nowrap; }
-        .tbl td { padding: .6rem .75rem; border-top: 1px solid rgba(255,255,255,0.08); }
+        .tbl { width: 100%; border-collapse: collapse; color: var(--w85); font-size: 0.875rem; }
+        .tbl th { text-align: left; font-size: 0.7rem; text-transform: uppercase; letter-spacing: .05em; color: var(--w45); padding: .6rem .75rem; white-space: nowrap; }
+        .tbl td { padding: .6rem .75rem; border-top: 1px solid var(--w08); }
         .pill { padding: .15rem .6rem; border-radius: 999px; font-size: .7rem; font-weight: 700; white-space: nowrap; }
     </style>
 </head>
@@ -117,9 +119,9 @@ $tipos = ['conectados' => 'Muitos conectados', 'trafego' => 'Alto consumo', 'rot
         </header>
 
         <?php if ($erro): ?>
-            <div class="mt-6 p-4 rounded-2xl text-sm font-semibold" style="background: rgba(255,76,48,0.15); border: 1px solid rgba(255,76,48,0.4); color: #ffb3a5;"><?= htmlspecialchars($erro) ?></div>
+            <div class="mt-6 p-4 rounded-2xl text-sm font-semibold" style="background: rgba(255,76,48,0.15); border: 1px solid rgba(255,76,48,0.4); color: var(--coral-soft);"><?= htmlspecialchars($erro) ?></div>
         <?php elseif ($ok): ?>
-            <div class="mt-6 p-4 rounded-2xl text-sm font-semibold" style="background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.4); color: #86efac;"><?= htmlspecialchars($ok) ?></div>
+            <div class="mt-6 p-4 rounded-2xl text-sm font-semibold" style="background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.4); color: var(--green-t);"><?= htmlspecialchars($ok) ?></div>
         <?php endif; ?>
 
         <form method="POST" class="glass-card rounded-2xl p-6 mt-6 grid gap-4 md:grid-cols-2">
@@ -153,7 +155,7 @@ $tipos = ['conectados' => 'Muitos conectados', 'trafego' => 'Alto consumo', 'rot
                 <form method="POST">
                     <input type="hidden" name="csrf" value="<?= htmlspecialchars($_SESSION['csrf']) ?>">
                     <input type="hidden" name="acao" value="reconhecer_todos">
-                    <button class="px-3 py-1.5 rounded-lg text-xs font-bold" style="background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.35); color: #86efac;">Reconhecer todos</button>
+                    <button class="px-3 py-1.5 rounded-lg text-xs font-bold" style="background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.35); color: var(--green-t);">Reconhecer todos</button>
                 </form>
                 <?php endif; ?>
             </div>
@@ -167,9 +169,9 @@ $tipos = ['conectados' => 'Muitos conectados', 'trafego' => 'Alto consumo', 'rot
                         <td><?= htmlspecialchars($a['mensagem']) ?></td>
                         <td class="whitespace-nowrap">
                             <?php if ($a['resolvido_em']): ?>
-                                <span class="pill" style="background: rgba(34,197,94,0.2); color:#86efac;">resolvido <?= fmt_dt2($a['resolvido_em']) ?></span>
+                                <span class="pill" style="background: rgba(34,197,94,0.2); color:var(--green-t);">resolvido <?= fmt_dt2($a['resolvido_em']) ?></span>
                             <?php else: ?>
-                                <span class="pill" style="background: rgba(255,76,48,0.25); color:#ffb3a5;">em andamento</span>
+                                <span class="pill" style="background: rgba(255,76,48,0.25); color:var(--coral-soft);">em andamento</span>
                             <?php endif; ?>
                             <?php if ($a['reconhecido_por']): ?>
                                 <span class="text-xs opacity-50">· visto por <?= htmlspecialchars($a['reconhecido_por']) ?></span>
@@ -181,7 +183,7 @@ $tipos = ['conectados' => 'Muitos conectados', 'trafego' => 'Alto consumo', 'rot
                                 <input type="hidden" name="csrf" value="<?= htmlspecialchars($_SESSION['csrf']) ?>">
                                 <input type="hidden" name="acao" value="reconhecer">
                                 <input type="hidden" name="id" value="<?= (int) $a['id'] ?>">
-                                <button class="px-3 py-1 rounded-lg text-xs font-bold" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color:#fff;">Reconhecer</button>
+                                <button class="px-3 py-1 rounded-lg text-xs font-bold" style="background: var(--w10); border: 1px solid var(--w20); color: var(--text);">Reconhecer</button>
                             </form>
                             <?php endif; ?>
                         </td>

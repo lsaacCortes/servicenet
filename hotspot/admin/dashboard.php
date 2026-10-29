@@ -60,7 +60,9 @@ $adminNome = $_SESSION['admin_nome'] ?? 'Admin';
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <link rel="stylesheet" href="assets/admin.css">
+    <link rel="stylesheet" href="assets/admin.css?v=<?= filemtime(__DIR__ . '/assets/admin.css') ?>">
+    <link rel="stylesheet" href="assets/theme.css?v=<?= filemtime(__DIR__ . '/assets/theme.css') ?>">
+    <script src="assets/theme.js?v=<?= filemtime(__DIR__ . '/assets/theme.js') ?>"></script>
 </head>
 <body class="admin-body">
 
@@ -154,7 +156,7 @@ $adminNome = $_SESSION['admin_nome'] ?? 'Admin';
         <!-- Stats Cards -->
         <div class="stats-grid">
             <div class="stat-card glass-card">
-                <div class="stat-icon" style="background: rgba(59,130,246,0.2); color: #60a5fa;">
+                <div class="stat-icon" style="background: rgba(59,130,246,0.2); color: var(--blue);">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
                     </svg>
@@ -166,7 +168,7 @@ $adminNome = $_SESSION['admin_nome'] ?? 'Admin';
             </div>
 
             <div class="stat-card glass-card">
-                <div class="stat-icon" style="background: rgba(251,191,36,0.2); color: #fbbf24;">
+                <div class="stat-icon" style="background: rgba(251,191,36,0.2); color: var(--amber);">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
@@ -178,7 +180,7 @@ $adminNome = $_SESSION['admin_nome'] ?? 'Admin';
             </div>
 
             <div class="stat-card glass-card">
-                <div class="stat-icon" style="background: rgba(168,85,247,0.2); color: #c084fc;">
+                <div class="stat-icon" style="background: rgba(168,85,247,0.2); color: var(--purple);">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
                     </svg>
@@ -190,7 +192,7 @@ $adminNome = $_SESSION['admin_nome'] ?? 'Admin';
             </div>
 
             <div class="stat-card glass-card">
-                <div class="stat-icon" style="background: rgba(34,197,94,0.2); color: #4ade80;">
+                <div class="stat-icon" style="background: rgba(34,197,94,0.2); color: var(--green);">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
@@ -202,7 +204,7 @@ $adminNome = $_SESSION['admin_nome'] ?? 'Admin';
             </div>
 
             <div class="stat-card glass-card">
-                <div class="stat-icon" style="background: rgba(255,76,48,0.2); color: #ff7a61;">
+                <div class="stat-icon" style="background: rgba(255,76,48,0.2); color: var(--coral);">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7a4 4 0 11-8 0 4 4 0 018 0zM9 14a6 6 0 00-6 6v1h12v-1a6 6 0 00-6-6zM21 12h-6"/>
                     </svg>
@@ -247,7 +249,7 @@ $adminNome = $_SESSION['admin_nome'] ?? 'Admin';
                     <div class="flex justify-between text-xs"><span class="text-yellow-300"><i class="fa-solid fa-square mr-1"></i>Novo</span><span class="text-white font-semibold"><?= $novos ?></span></div>
                     <div class="flex justify-between text-xs"><span class="text-purple-300"><i class="fa-solid fa-square mr-1"></i>Em Contato</span><span class="text-white font-semibold"><?= $emContato ?></span></div>
                     <div class="flex justify-between text-xs"><span class="text-green-300"><i class="fa-solid fa-square mr-1"></i>Convertido</span><span class="text-white font-semibold"><?= $convertidos ?></span></div>
-                    <div class="flex justify-between text-xs"><span style="color:#ff7a61"><i class="fa-solid fa-square mr-1"></i>Descartado</span><span class="text-white font-semibold"><?= $descartados ?></span></div>
+                    <div class="flex justify-between text-xs"><span style="color:var(--coral)"><i class="fa-solid fa-square mr-1"></i>Descartado</span><span class="text-white font-semibold"><?= $descartados ?></span></div>
                 </div>
             </div>
         </div>
@@ -259,7 +261,7 @@ $adminNome = $_SESSION['admin_nome'] ?? 'Admin';
             <div class="glass-card rounded-2xl p-6">
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-white font-bold text-base">Leads Recentes</h2>
-                    <a href="leads.php" class="text-xs text-accent hover:underline" style="color: #ff7a61;">Ver todos <i class="fa-solid fa-arrow-right"></i></a>
+                    <a href="leads.php" class="text-xs text-accent hover:underline" style="color: var(--coral);">Ver todos <i class="fa-solid fa-arrow-right"></i></a>
                 </div>
                 <div class="space-y-3">
                     <?php foreach ($recentes as $l): ?>
@@ -279,7 +281,7 @@ $adminNome = $_SESSION['admin_nome'] ?? 'Admin';
                             default      => ucfirst($l['status'])
                         };
                     ?>
-                    <div class="flex items-center gap-3 p-3 rounded-xl" style="background: rgba(255,255,255,0.05);">
+                    <div class="flex items-center gap-3 p-3 rounded-xl" style="background: var(--w05);">
                         <div class="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm text-white flex-shrink-0" style="background: linear-gradient(135deg, #172a4c, #ff4c30);">
                             <?= strtoupper(substr($l['nome'], 0, 1)) ?>
                         </div>
@@ -313,7 +315,7 @@ $adminNome = $_SESSION['admin_nome'] ?? 'Admin';
                             <span class="text-white font-medium truncate"><?= htmlspecialchars($b['bairro']) ?></span>
                             <span class="text-white opacity-60 ml-2 flex-shrink-0"><?= $b['total'] ?> leads</span>
                         </div>
-                        <div class="h-2 rounded-full" style="background: rgba(255,255,255,0.1);">
+                        <div class="h-2 rounded-full" style="background: var(--w10);">
                             <div class="h-2 rounded-full transition-all" style="width: <?= $pct ?>%; background: linear-gradient(90deg, #ff4c30, #ff8c6b);"></div>
                         </div>
                     </div>
@@ -328,7 +330,7 @@ $adminNome = $_SESSION['admin_nome'] ?? 'Admin';
     <script>
     // Chart: Leads ultimos 7 dias
     const ctx1 = document.getElementById('chartLeads').getContext('2d');
-    new Chart(ctx1, {
+    const chartLeads = new Chart(ctx1, {
         type: 'line',
         data: {
             labels: <?= json_encode($chartDias) ?>,
@@ -349,10 +351,19 @@ $adminNome = $_SESSION['admin_nome'] ?? 'Admin';
             maintainAspectRatio: false,
             plugins: { legend: { display: false } },
             scales: {
-                x: { ticks: { color: 'rgba(255,255,255,0.5)', font: { family: 'Raleway', size: 11 } }, grid: { color: 'rgba(255,255,255,0.05)' } },
-                y: { ticks: { color: 'rgba(255,255,255,0.5)', font: { family: 'Raleway', size: 11 }, stepSize: 1 }, grid: { color: 'rgba(255,255,255,0.05)' }, beginAtZero: true }
+                x: { ticks: { color: SNTheme.chart().tick, font: { family: 'Raleway', size: 11 } }, grid: { color: SNTheme.chart().grid } },
+                y: { ticks: { color: SNTheme.chart().tick, font: { family: 'Raleway', size: 11 }, stepSize: 1 }, grid: { color: SNTheme.chart().grid }, beginAtZero: true }
             }
         }
+    });
+
+    document.addEventListener('sn-theme', () => {
+        const c = SNTheme.chart();
+        ['x', 'y'].forEach(a => {
+            chartLeads.options.scales[a].ticks.color = c.tick;
+            chartLeads.options.scales[a].grid.color = c.grid;
+        });
+        chartLeads.update();
     });
 
     // Chart: Status donut

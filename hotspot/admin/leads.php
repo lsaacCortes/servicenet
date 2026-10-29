@@ -45,65 +45,65 @@ $adminNome = $_SESSION['admin_nome'] ?? 'Admin';
     <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="assets/admin.css">
+    <link rel="stylesheet" href="assets/admin.css?v=<?= filemtime(__DIR__ . '/assets/admin.css') ?>">
+    <link rel="stylesheet" href="assets/theme.css?v=<?= filemtime(__DIR__ . '/assets/theme.css') ?>">
+    <script src="assets/theme.js?v=<?= filemtime(__DIR__ . '/assets/theme.js') ?>"></script>
     <style>
         .lead-card {
-            background: rgba(255,255,255,0.07);
+            background: var(--w07);
             backdrop-filter: blur(20px) saturate(160%);
             -webkit-backdrop-filter: blur(20px) saturate(160%);
-            border: 1px solid rgba(255,255,255,0.12);
-            box-shadow: 0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08);
+            border: 1px solid var(--w12);
+            box-shadow: 0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 var(--w08);
             transition: all 0.3s ease;
         }
         .lead-card:hover {
             transform: translateY(-4px);
             border-color: rgba(255,76,48,0.35);
-            box-shadow: 0 12px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,76,48,0.2), inset 0 1px 0 rgba(255,255,255,0.12);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,76,48,0.2), inset 0 1px 0 var(--w12);
         }
         .filter-bar {
-            background: rgba(255,255,255,0.06);
+            background: var(--w06);
             backdrop-filter: blur(16px);
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid var(--w10);
         }
         .search-input {
-            background: rgba(255,255,255,0.08);
-            border: 1px solid rgba(255,255,255,0.15);
-            color: white;
+            background: var(--w08);
+            border: 1px solid var(--w15);
+            color: var(--text);
         }
-        .search-input::placeholder { color: rgba(255,255,255,0.35); }
-        .search-input:focus { outline: none; border-color: #ff4c30; background: rgba(255,255,255,0.12); }
+        .search-input::placeholder { color: var(--w35); }
+        .search-input:focus { outline: none; border-color: #ff4c30; background: var(--w12); }
 
         .filter-btn {
-            background: rgba(255,255,255,0.07);
-            border: 1px solid rgba(255,255,255,0.15);
-            color: rgba(255,255,255,0.7);
+            background: var(--w07);
+            border: 1px solid var(--w15);
+            color: var(--w70);
             transition: all 0.2s;
         }
         .filter-btn:hover, .filter-btn.active {
             background: rgba(255,76,48,0.25);
             border-color: rgba(255,76,48,0.5);
-            color: white;
+            color: var(--text);
         }
 
         /* Modal */
         .modal-backdrop {
-            background: rgba(0,0,0,0.7);
+            background: var(--backdrop);
             backdrop-filter: blur(8px);
         }
         .modal-box {
-            background: rgba(20,30,55,0.95);
-            backdrop-filter: blur(24px);
-            border: 1px solid rgba(255,255,255,0.15);
-            box-shadow: 0 25px 60px rgba(0,0,0,0.6);
+            background: var(--surface);
+            border: 1px solid var(--w15);
         }
         .modal-input {
-            background: rgba(255,255,255,0.08);
-            border: 1px solid rgba(255,255,255,0.2);
-            color: white;
+            background: var(--w08);
+            border: 1px solid var(--w20);
+            color: var(--text);
         }
         .modal-input:focus { outline: none; border-color: #ff4c30; }
-        .modal-input::placeholder { color: rgba(255,255,255,0.3); }
-        select.modal-input option { background: #1a2744; color: white; }
+        .modal-input::placeholder { color: var(--w30); }
+        select.modal-input option { background: var(--option-bg); color: var(--text); }
 
         .avatar {
             background: linear-gradient(135deg, #172a4c, #ff4c30);
@@ -112,7 +112,7 @@ $adminNome = $_SESSION['admin_nome'] ?? 'Admin';
         .card-phone-btn {
             background: rgba(34,197,94,0.15);
             border: 1px solid rgba(34,197,94,0.3);
-            color: #4ade80;
+            color: var(--green);
             transition: all 0.2s;
         }
         .card-phone-btn:hover {
@@ -120,9 +120,9 @@ $adminNome = $_SESSION['admin_nome'] ?? 'Admin';
         }
 
         .page-btn {
-            background: rgba(255,255,255,0.08);
-            border: 1px solid rgba(255,255,255,0.15);
-            color: white;
+            background: var(--w08);
+            border: 1px solid var(--w15);
+            color: var(--text);
             transition: all 0.2s;
         }
         .page-btn:hover, .page-btn.active {
@@ -271,7 +271,7 @@ $adminNome = $_SESSION['admin_nome'] ?? 'Admin';
                     </div>
                     <div class="flex-1 min-w-0">
                         <h3 class="text-white font-bold text-sm leading-tight truncate"><?= htmlspecialchars($lead['nome']) ?></h3>
-                        <p class="text-xs mt-0.5" style="color: rgba(255,255,255,0.45);"><?= $dataFormatada ?></p>
+                        <p class="text-xs mt-0.5" style="color: var(--w45);"><?= $dataFormatada ?></p>
                     </div>
                     <span class="badge badge-<?= $lead['status'] ?> flex-shrink-0" id="badge-<?= $lead['id'] ?>">
                         <?= $statusLabel ?>
@@ -280,14 +280,14 @@ $adminNome = $_SESSION['admin_nome'] ?? 'Admin';
 
                 <!-- Info -->
                 <div class="space-y-2">
-                    <div class="flex items-center gap-2 text-sm" style="color: rgba(255,255,255,0.7);">
+                    <div class="flex items-center gap-2 text-sm" style="color: var(--w70);">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 flex-shrink-0 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
                         </svg>
                         <span class="font-medium"><?= htmlspecialchars($lead['telefone']) ?></span>
                     </div>
                     <?php if (!empty($lead['bairro']) && $lead['bairro'] !== 'Nao informado'): ?>
-                    <div class="flex items-center gap-2 text-sm" style="color: rgba(255,255,255,0.55);">
+                    <div class="flex items-center gap-2 text-sm" style="color: var(--w55);">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 flex-shrink-0 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -296,14 +296,14 @@ $adminNome = $_SESSION['admin_nome'] ?? 'Admin';
                     </div>
                     <?php endif; ?>
                     <?php if (!empty($lead['anotacoes'])): ?>
-                    <div class="text-xs mt-1 p-2 rounded-lg" style="background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.5);">
+                    <div class="text-xs mt-1 p-2 rounded-lg" style="background: var(--w05); color: var(--w50);">
                         <i class="fa-solid fa-note-sticky"></i> <?= nl2br(htmlspecialchars(mb_substr($lead['anotacoes'], 0, 80))) ?><?= strlen($lead['anotacoes']) > 80 ? '...' : '' ?>
                     </div>
                     <?php endif; ?>
                 </div>
 
                 <!-- Actions -->
-                <div class="flex gap-2 mt-auto pt-2 border-t" style="border-color: rgba(255,255,255,0.08);">
+                <div class="flex gap-2 mt-auto pt-2 border-t" style="border-color: var(--w08);">
                     <a href="https://wa.me/55<?= preg_replace('/\D/', '', $lead['telefone']) ?>" target="_blank"
                        class="card-phone-btn flex-1 py-2 rounded-xl text-xs font-bold text-center flex items-center justify-center gap-1">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 24 24">
@@ -313,7 +313,7 @@ $adminNome = $_SESSION['admin_nome'] ?? 'Admin';
                     </a>
                     <button onclick="openModal(<?= $lead['id'] ?>, '<?= htmlspecialchars(addslashes($lead['nome'])) ?>', '<?= $lead['status'] ?>', '<?= htmlspecialchars(addslashes($lead['anotacoes'] ?? '')) ?>')"
                             class="flex-1 py-2 rounded-xl text-xs font-bold text-white flex items-center justify-center gap-1"
-                            style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); transition: all 0.2s;">
+                            style="background: var(--w10); border: 1px solid var(--w15); transition: all 0.2s;">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                         </svg>
@@ -321,7 +321,7 @@ $adminNome = $_SESSION['admin_nome'] ?? 'Admin';
                     </button>
                     <button onclick="deleteLead(<?= $lead['id'] ?>, '<?= htmlspecialchars(addslashes($lead['nome'])) ?>')"
                             class="py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center"
-                            style="background: rgba(255,76,48,0.15); border: 1px solid rgba(255,76,48,0.3); color: #ff7a61; transition: all 0.2s;">
+                            style="background: rgba(255,76,48,0.15); border: 1px solid rgba(255,76,48,0.3); color: var(--coral); transition: all 0.2s;">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                         </svg>
@@ -355,14 +355,13 @@ $adminNome = $_SESSION['admin_nome'] ?? 'Admin';
 
     <!-- Edit Modal -->
     <div id="editModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 modal-backdrop">
-        <div class="modal-box rounded-2xl w-full max-w-md p-6 relative">
-            <button onclick="closeModal()" class="absolute right-4 top-4 text-white opacity-50 hover:opacity-100 text-2xl leading-none">&times;</button>
+        <div class="modal-box rounded-2xl w-full max-w-sm p-6">
             <h3 class="text-white font-bold text-lg mb-1">Editar Lead</h3>
-            <p id="modalNome" class="text-sm mb-5" style="color: rgba(255,255,255,0.5);"></p>
+            <p id="modalNome" class="text-sm mb-5" style="color: var(--w50);"></p>
 
             <div class="space-y-4">
                 <div>
-                    <label class="block text-sm font-semibold mb-1.5" style="color: rgba(255,255,255,0.7);">Status</label>
+                    <label class="block text-sm font-semibold mb-1.5" style="color: var(--w70);">Status</label>
                     <select id="modalStatus" class="modal-input w-full py-2.5 px-3 rounded-xl text-sm">
                         <option value="novo">Novo</option>
                         <option value="em_contato">Em Contato</option>
@@ -371,7 +370,7 @@ $adminNome = $_SESSION['admin_nome'] ?? 'Admin';
                     </select>
                 </div>
                 <div>
-                    <label class="block text-sm font-semibold mb-1.5" style="color: rgba(255,255,255,0.7);">Anotacoes</label>
+                    <label class="block text-sm font-semibold mb-1.5" style="color: var(--w70);">Anotacoes</label>
                     <textarea id="modalAnotacoes" rows="4" placeholder="Adicione observacoes sobre este lead..."
                               class="modal-input w-full py-2.5 px-3 rounded-xl text-sm resize-none"></textarea>
                 </div>
@@ -379,7 +378,7 @@ $adminNome = $_SESSION['admin_nome'] ?? 'Admin';
 
             <div class="flex gap-3 mt-6">
                 <button onclick="closeModal()" class="flex-1 py-2.5 rounded-xl text-sm font-bold text-white"
-                        style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);">
+                        style="background: var(--w10); border: 1px solid var(--w20);">
                     Cancelar
                 </button>
                 <button onclick="saveLead()" id="saveBtn"
@@ -433,7 +432,7 @@ $adminNome = $_SESSION['admin_nome'] ?? 'Admin';
             const data = await res.json();
             if (data.success) {
                 msg.innerHTML = '<i class="fa-solid fa-circle-check"></i> Salvo com sucesso!';
-                msg.style.color = '#4ade80';
+                msg.style.color = 'var(--green)';
                 msg.classList.remove('hidden');
                 // Atualiza badge no card
                 const badge = document.getElementById('badge-' + currentLeadId);
@@ -446,12 +445,12 @@ $adminNome = $_SESSION['admin_nome'] ?? 'Admin';
             } else {
                 msg.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> ';
                 msg.append(data.message || 'Erro ao salvar.');
-                msg.style.color = '#ff7a61';
+                msg.style.color = 'var(--coral)';
                 msg.classList.remove('hidden');
             }
         } catch (e) {
             msg.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> Erro de comunicacao.';
-            msg.style.color = '#ff7a61';
+            msg.style.color = 'var(--coral)';
             msg.classList.remove('hidden');
         } finally {
             btn.disabled = false;
@@ -499,7 +498,7 @@ $adminNome = $_SESSION['admin_nome'] ?? 'Admin';
         if (e.target === this) closeModal();
     });
     </script>
-    <script src="assets/ui.js" defer></script>
+    <script src="assets/ui.js?v=<?= filemtime(__DIR__ . '/assets/ui.js') ?>" defer></script>
     <script src="assets/alertas.js" defer></script>
 </body>
 </html>

@@ -15,11 +15,13 @@ $adminNome = $_SESSION['admin_nome'] ?? 'Admin';
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <link rel="stylesheet" href="assets/admin.css">
+    <link rel="stylesheet" href="assets/admin.css?v=<?= filemtime(__DIR__ . '/assets/admin.css') ?>">
+    <link rel="stylesheet" href="assets/theme.css?v=<?= filemtime(__DIR__ . '/assets/theme.css') ?>">
+    <script src="assets/theme.js?v=<?= filemtime(__DIR__ . '/assets/theme.js') ?>"></script>
     <style>
-        .tbl { width: 100%; border-collapse: collapse; color: rgba(255,255,255,0.85); font-size: 0.875rem; }
-        .tbl th { text-align: left; font-size: 0.7rem; text-transform: uppercase; letter-spacing: .05em; color: rgba(255,255,255,0.45); padding: .6rem .75rem; white-space: nowrap; }
-        .tbl td { padding: .6rem .75rem; border-top: 1px solid rgba(255,255,255,0.08); white-space: nowrap; }
+        .tbl { width: 100%; border-collapse: collapse; color: var(--w85); font-size: 0.875rem; }
+        .tbl th { text-align: left; font-size: 0.7rem; text-transform: uppercase; letter-spacing: .05em; color: var(--w45); padding: .6rem .75rem; white-space: nowrap; }
+        .tbl td { padding: .6rem .75rem; border-top: 1px solid var(--w08); white-space: nowrap; }
         .chart-box { position: relative; height: 260px; }
     </style>
 </head>
@@ -63,31 +65,31 @@ $adminNome = $_SESSION['admin_nome'] ?? 'Admin';
             </div>
         </header>
 
-        <div id="aviso" class="hidden mt-6 p-4 rounded-2xl text-sm font-semibold" style="background: rgba(255,76,48,0.15); border: 1px solid rgba(255,76,48,0.4); color: #ffb3a5;"></div>
+        <div id="aviso" class="hidden mt-6 p-4 rounded-2xl text-sm font-semibold" style="background: rgba(255,76,48,0.15); border: 1px solid rgba(255,76,48,0.4); color: var(--coral-soft);"></div>
 
         <div class="stats-grid">
             <div class="stat-card glass-card">
-                <div class="stat-icon" style="background: rgba(59,130,246,0.2); color: #60a5fa;"><i class="fa-solid fa-wifi text-xl"></i></div>
+                <div class="stat-icon" style="background: rgba(59,130,246,0.2); color: var(--blue);"><i class="fa-solid fa-wifi text-xl"></i></div>
                 <div><p class="stat-label">Conectados agora</p><p class="stat-value" id="cConectados">—</p></div>
             </div>
             <div class="stat-card glass-card">
-                <div class="stat-icon" style="background: rgba(251,191,36,0.2); color: #fbbf24;"><i class="fa-solid fa-hourglass-half text-xl"></i></div>
+                <div class="stat-icon" style="background: rgba(251,191,36,0.2); color: var(--amber);"><i class="fa-solid fa-hourglass-half text-xl"></i></div>
                 <div><p class="stat-label">Ociosos há 3h ou mais</p><p class="stat-value" id="cOciosos">—</p></div>
             </div>
             <div class="stat-card glass-card">
-                <div class="stat-icon" style="background: rgba(255,76,48,0.2); color: #ff7a61;"><i class="fa-solid fa-ban text-xl"></i></div>
+                <div class="stat-icon" style="background: rgba(255,76,48,0.2); color: var(--coral);"><i class="fa-solid fa-ban text-xl"></i></div>
                 <div><p class="stat-label">Bloqueados</p><p class="stat-value" id="cBloqueados">—</p></div>
             </div>
             <div class="stat-card glass-card">
-                <div class="stat-icon" style="background: rgba(34,197,94,0.2); color: #4ade80;"><i class="fa-solid fa-arrow-down text-xl"></i></div>
+                <div class="stat-icon" style="background: rgba(34,197,94,0.2); color: var(--green);"><i class="fa-solid fa-arrow-down text-xl"></i></div>
                 <div><p class="stat-label">Download (sessões ativas)</p><p class="stat-value" id="cDown">—</p></div>
             </div>
             <div class="stat-card glass-card">
-                <div class="stat-icon" style="background: rgba(168,85,247,0.2); color: #c084fc;"><i class="fa-solid fa-arrow-up text-xl"></i></div>
+                <div class="stat-icon" style="background: rgba(168,85,247,0.2); color: var(--purple);"><i class="fa-solid fa-arrow-up text-xl"></i></div>
                 <div><p class="stat-label">Upload (sessões ativas)</p><p class="stat-value" id="cUp">—</p></div>
             </div>
             <div class="stat-card glass-card">
-                <div class="stat-icon" style="background: rgba(255,255,255,0.12); color: #fff;"><i class="fa-solid fa-right-to-bracket text-xl"></i></div>
+                <div class="stat-icon" style="background: var(--w12); color: var(--text);"><i class="fa-solid fa-right-to-bracket text-xl"></i></div>
                 <div><p class="stat-label">Logins hoje</p><p class="stat-value"><span id="cLoginsHoje">—</span> <span class="text-xs opacity-50 font-normal" id="cUnicosHoje"></span></p></div>
             </div>
         </div>
@@ -125,14 +127,24 @@ $adminNome = $_SESSION['admin_nome'] ?? 'Admin';
     }
     function td(text) { const e = document.createElement('td'); e.textContent = text; return e; }
 
-    const eixo = { ticks: { color: 'rgba(255,255,255,0.6)' }, grid: { color: 'rgba(255,255,255,0.08)' } };
+    function eixo() { const c = SNTheme.chart(); return { ticks: { color: c.tick, precision: 0 }, grid: { color: c.grid } }; }
     function opcoes(extra) {
         return Object.assign({
             responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { labels: { color: 'rgba(255,255,255,0.8)' } } },
-            scales: { x: eixo, y: Object.assign({ beginAtZero: true, ticks: { color: 'rgba(255,255,255,0.6)', precision: 0 } }, { grid: eixo.grid }) }
+            plugins: { legend: { labels: { color: SNTheme.chart().legend } } },
+            scales: { x: eixo(), y: Object.assign(eixo(), { beginAtZero: true }) }
         }, extra || {});
     }
+    // Troca de tema: recolore eixos e legenda dos graficos ja criados.
+    document.addEventListener('sn-theme', () => {
+        const c = SNTheme.chart();
+        [gDia, gHora].forEach(g => {
+            if (!g) return;
+            ['x', 'y'].forEach(a => { g.options.scales[a].ticks.color = c.tick; g.options.scales[a].grid.color = c.grid; });
+            if (g.options.plugins.legend.labels) g.options.plugins.legend.labels.color = c.legend;
+            g.update();
+        });
+    });
 
     function graficos(l) {
         const dias = l.por_dia.map(x => x.dia);
