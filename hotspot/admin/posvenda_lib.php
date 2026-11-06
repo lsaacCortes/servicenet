@@ -181,7 +181,7 @@ function posvenda_fone_intl(string $tel): string
 }
 
 // Retorna ['ok' => bool, 'message' => string]
-function posvenda_chatmix_enviar(string $nome, string $telefone, string $atendente, string $textoLivre = ''): array
+function posvenda_chatmix_enviar(string $nome, string $telefone, string $atendente): array
 {
     if (!defined('CHATMIX_KEY') || !defined('CHATMIX_TOKEN') || CHATMIX_KEY === '' || CHATMIX_TOKEN === '') {
         return ['ok' => false, 'message' => 'ChatMix não configurado: defina CHATMIX_KEY e CHATMIX_TOKEN no config.php.'];
@@ -195,9 +195,7 @@ function posvenda_chatmix_enviar(string $nome, string $telefone, string $atenden
 
     $campos   = [];
     $template = defined('CHATMIX_TEMPLATE') ? CHATMIX_TEMPLATE : '';
-    if ($textoLivre !== '') {
-        $mensagem = $textoLivre; // avulsa: so entrega dentro da janela de 24h da Meta
-    } elseif ($template !== '') {
+    if ($template !== '') {
         // Template oficial (API HSM do ChatMix): "variables=v1|v2||template=ID". "|" e "=" separam campos, entao saem dos valores.
         $limpa = fn(string $v): string => trim(str_replace(['|', '='], ' ', $v));
         $mensagem = 'variables=' . $limpa($primeiro) . '|' . $limpa($atendente) . '||template=' . $template;

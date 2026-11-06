@@ -179,16 +179,14 @@ switch ($action) {
         }
         $nome  = trim($_POST['nome'] ?? '');
         $fone  = trim($_POST['telefone'] ?? '');
-        $texto = trim($_POST['texto'] ?? '');
         if ($nome === '' || mb_strlen($nome) > 60) out(['success' => false, 'message' => 'Informe o nome (até 60 caracteres).'], 422);
         $intl = posvenda_fone_intl($fone);
         if ($intl === '') out(['success' => false, 'message' => 'Telefone inválido. Use DDD + número.'], 422);
-        if (mb_strlen($texto) > 1000) out(['success' => false, 'message' => 'Mensagem muito longa.'], 422);
 
         $atendente = trim(explode(' ', trim($adminNome))[0]);
-        $res = posvenda_chatmix_enviar($nome, $fone, $atendente, $texto);
+        $res = posvenda_chatmix_enviar($nome, $fone, $atendente);
         admin_log($pdo, $res['ok'] ? 'posvenda_envio_avulso' : 'posvenda_envio_falha', $nome,
-            ($texto !== '' ? 'texto livre' : 'template') . ' -> ' . substr($intl, 0, -4) . '****' . ($res['ok'] ? '' : ' | ' . $res['message']));
+            'template -> ' . substr($intl, 0, -4) . '****' . ($res['ok'] ? '' : ' | ' . $res['message']));
         out(['success' => $res['ok'], 'message' => $res['message']], $res['ok'] ? 200 : 502);
     }
 

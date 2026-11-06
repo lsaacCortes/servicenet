@@ -210,7 +210,7 @@ $adminNome = $_SESSION['admin_nome'] ?? 'Admin';
     <div id="modalAv" class="fixed inset-0 z-50 hidden items-center justify-center p-4 modal-backdrop">
         <div class="modal-box rounded-2xl w-full max-w-md p-6 relative" role="dialog" aria-modal="true">
             <button id="aFechar" class="absolute right-4 top-4 text-white opacity-50 hover:opacity-100 text-2xl leading-none" aria-label="Fechar">&times;</button>
-            <h3 class="text-white font-bold text-lg mb-1">Enviar mensagem avulsa</h3>
+            <h3 class="text-white font-bold text-lg mb-1">Enviar mensagem de teste</h3>
             <p class="pv-muted mb-5">Para teste ou envio manual. Não cria nem altera registros da lista.</p>
             <div class="space-y-4">
                 <div>
@@ -220,12 +220,6 @@ $adminNome = $_SESSION['admin_nome'] ?? 'Admin';
                 <div>
                     <label class="lbl" for="aFone">Telefone com DDD</label>
                     <input id="aFone" type="tel" placeholder="(11) 99999-9999" class="modal-input w-full py-2.5 px-3 rounded-xl text-sm">
-                </div>
-                <div>
-                    <label class="lbl" for="aTexto">Mensagem personalizada (opcional)</label>
-                    <textarea id="aTexto" rows="3" maxlength="1000" placeholder="Deixe vazio para enviar o template de pós-venda."
-                              class="modal-input w-full py-2.5 px-3 rounded-xl text-sm resize-none"></textarea>
-                    <p class="pv-muted mt-1">Texto livre só é entregue se o cliente falou com vocês nas últimas 24h.</p>
                 </div>
             </div>
             <p id="aErro" class="text-xs font-semibold mt-3 hidden" style="color:var(--coral);"></p>
@@ -454,15 +448,15 @@ $adminNome = $_SESSION['admin_nome'] ?? 'Admin';
     // ---- Envio avulso ----
     function avErro(m) { $('aErro').textContent = m; $('aErro').classList.remove('hidden'); }
     async function enviarAvulso() {
-        const nome = $('aNome').value.trim(), fone = $('aFone').value.trim(), texto = $('aTexto').value.trim();
+        const nome = $('aNome').value.trim(), fone = $('aFone').value.trim();
         if (!nome) return avErro('Informe o nome.');
         if (fone.replace(/\D/g, '').length < 10) return avErro('Informe o telefone com DDD.');
         $('aErro').classList.add('hidden');
-        const ok = await SN.confirm({ title: 'Enviar mensagem', message: 'Enviar ' + (texto ? 'a mensagem personalizada' : 'o template de pós-venda') + ' para ' + fone + '?', confirmText: 'Enviar', tone: 'primary' });
+        const ok = await SN.confirm({ title: 'Enviar mensagem', message: 'Enviar o template de pós-venda para ' + fone + '?', confirmText: 'Enviar', tone: 'primary' });
         if (!ok) return;
         const btn = $('aEnviar'); btn.disabled = true; btn.textContent = 'Enviando...';
         try {
-            const r = await api('enviar_avulso', { nome, telefone: fone, texto });
+            const r = await api('enviar_avulso', { nome, telefone: fone });
             if (r.success) { mostrar('modalAv', false); SN.toast(r.message); } else avErro(r.message || 'Falha ao enviar.');
         } catch (e) { if (e.message !== 'sessao') avErro('Erro de comunicação.'); }
         btn.disabled = false; btn.textContent = 'Enviar';
