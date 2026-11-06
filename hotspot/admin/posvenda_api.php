@@ -171,14 +171,48 @@ switch ($action) {
         out(['success' => true, 'message' => $status === 'concluido' ? 'Atendimento concluído.' : 'Atendimento atualizado.']);
     }
 
-    // Clique no WhatsApp: se ainda estava pendente, passa para "em contato"
-    case 'contato': {
+    // Envio avulso (teste ou mensagem manual) para qualquer numero, sem tocar na lista
+    case 'enviar_avulso': {
+        if (!$ehPost) out(['success' => false, 'message' => 'Método inválido.'], 405);
+        if (admin_perfil($pdo) !== 'admin') {
+            out(['success' => false, 'message' => 'Seu perfil é somente de visualização.'], 403);
+        }
+        $nome  = trim($_POST['nome'] ?? '');
+        $fone  = trim($_POST['telefone'] ?? '');
+        $texto = trim($_POST['texto'] ?? '');
+        if ($nome === '' || mb_strlen($nome) > 60) out(['success' => false, 'message' => 'Informe o nome (até 60 caracteres).'], 422);
+        $intl = posvenda_fone_intl($fone);
+        if ($intl === '') out(['success' => false, 'message' => 'Telefone inválido. Use DDD + número.'], 422);
+        if (mb_strlen($texto) > 1000) out(['success' => false, 'message' => 'Mensagem muito longa.'], 422);
+
+        $atendente = trim(explode(' ', trim($adminNome))[0]);
+        $res = posvenda_chatmix_enviar($nome, $fone, $atendente, $texto);
+        admin_log($pdo, $res['ok'] ? 'posvenda_envio_avulso' : 'posvenda_envio_falha', $nome,
+            ($texto !== '' ? 'texto livre' : 'template') . ' -> ' . substr($intl, 0, -4) . '****' . ($res['ok'] ? '' : ' | ' . $res['message']));
+        out(['success' => $res['ok'], 'message' => $res['message']], $res['ok'] ? 200 : 502);
+    }
+
+    // Envia a mensagem de pos-venda pelo ChatMix e marca como "em contato"
+    case 'enviar': {
         if (!$ehPost) out(['success' => false, 'message' => 'Método inválido.'], 405);
         $id = (int) ($_POST['id'] ?? 0);
-        $stmt = $pdo->prepare("UPDATE posvenda SET status = 'em_contato', ultimo_contato_em = NOW(), ultimo_contato_por = ?
-                               WHERE id = ? AND status IN ('pendente')");
-        $stmt->execute([$adminNome, $id]);
-        out(['success' => true, 'alterado' => $stmt->rowCount() > 0]);
+        $stmt = $pdo->prepare("SELECT nome, telefone, status FROM posvenda WHERE id = ?");
+        $stmt->execute([$id]);
+        $r = $stmt->fetch();
+        if (!$r) out(['success' => false, 'message' => 'Registro não encontrado.'], 404);
+        if ($r['status'] === 'concluido') out(['success' => false, 'message' => 'Atendimento já concluído.'], 422);
+
+        $atendente = trim(explode(' ', trim($adminNome))[0]);
+        $res = posvenda_chatmix_enviar($r['nome'], (string) $r['telefone'], $atendente);
+        if (!$res['ok']) {
+            admin_log($pdo, 'posvenda_envio_falha', $r['nome'], $res['message']);
+            out(['success' => false, 'message' => $res['message']], 502);
+        }
+        $pdo->prepare("UPDATE posvenda SET status = IF(status = 'pendente', 'em_contato', status),
+                       ultimo_contato_em = NOW(), ultimo_contato_por = ? WHERE id = ?")
+            ->execute([$adminNome, $id]);
+        admin_log($pdo, 'posvenda_envio', $r['nome'], 'mensagem enviada via ChatMix');
+        out(['success' => true, 'message' => 'Mensagem enviada para ' . explode(' ', trim($r['nome']))[0] . '.']);
     }
 
     case 'config': {

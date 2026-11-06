@@ -165,3 +165,81 @@ function posvenda_data($v): ?string
     $t = strtotime($v);
     return $t ? date('Y-m-d H:i:s', $t) : null;
 }
+
+
+// =============================================================
+// Envio da mensagem de pos-venda pela API de disparos do ChatMix
+// =============================================================
+
+// Telefone para o formato internacional (+55DDDNUMERO); '' se invalido
+function posvenda_fone_intl(string $tel): string
+{
+    $n = preg_replace('/\D/', '', $tel);
+    if (strlen($n) < 10) return '';
+    if (!(strpos($n, '55') === 0 && strlen($n) >= 12)) $n = '55' . $n;
+    return '+' . $n;
+}
+
+// Retorna ['ok' => bool, 'message' => string]
+function posvenda_chatmix_enviar(string $nome, string $telefone, string $atendente, string $textoLivre = ''): array
+{
+    if (!defined('CHATMIX_KEY') || !defined('CHATMIX_TOKEN') || CHATMIX_KEY === '' || CHATMIX_TOKEN === '') {
+        return ['ok' => false, 'message' => 'ChatMix não configurado: defina CHATMIX_KEY e CHATMIX_TOKEN no config.php.'];
+    }
+    $fone = posvenda_fone_intl($telefone);
+    if ($fone === '') return ['ok' => false, 'message' => 'Cliente sem telefone válido.'];
+
+    $partes  = preg_split('/\s+/', trim($nome));
+    $primeiro = mb_convert_case(mb_strtolower($partes[0] ?? ''), MB_CASE_TITLE, 'UTF-8');
+    $atendente = $atendente !== '' ? $atendente : 'a equipe';
+
+    $campos   = [];
+    $template = defined('CHATMIX_TEMPLATE') ? CHATMIX_TEMPLATE : '';
+    if ($textoLivre !== '') {
+        $mensagem = $textoLivre; // avulsa: so entrega dentro da janela de 24h da Meta
+    } elseif ($template !== '') {
+        // Template oficial (API HSM do ChatMix): "variables=v1|v2||template=ID". "|" e "=" separam campos, entao saem dos valores.
+        $limpa = fn(string $v): string => trim(str_replace(['|', '='], ' ', $v));
+        $mensagem = 'variables=' . $limpa($primeiro) . '|' . $limpa($atendente) . '||template=' . $template;
+    } else {
+        $mensagem = "Olá, $primeiro! Aqui é $atendente, da ServiceNet. 😊\n\n"
+            . "Já faz cerca de uma semana que sua internet foi ativada e queremos saber: está tudo certo com a sua conexão? "
+            . "Podemos ajudar em alguma coisa?\n\nSua opinião é muito importante para nós!";
+    }
+
+    $curl = curl_init();
+    curl_setopt_array($curl, [
+        CURLOPT_URL            => defined('CHATMIX_URL') ? CHATMIX_URL : 'https://envios.bulkv2.chatmix.com.br/api',
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_CONNECTTIMEOUT => 8,
+        CURLOPT_TIMEOUT        => 20,
+        CURLOPT_POST           => true,
+        CURLOPT_HTTPHEADER     => ['Content-Type: application/json'],
+        CURLOPT_POSTFIELDS     => json_encode([
+            'key'         => CHATMIX_KEY,
+            'token'       => CHATMIX_TOKEN,
+            'numero'      => $fone,
+            'mensagem'    => $mensagem,
+            'agendamento' => 'sim',
+        ] + $campos, JSON_UNESCAPED_UNICODE),
+    ]);
+    $resp = curl_exec($curl);
+    $http = (int) curl_getinfo($curl, CURLINFO_HTTP_CODE);
+    curl_close($curl);
+
+    if ($resp === false) return ['ok' => false, 'message' => 'Não foi possível conectar ao ChatMix.'];
+    $dados = json_decode($resp, true);
+    if ($http === 200 && is_array($dados) && !empty($dados['success'])) {
+        return ['ok' => true, 'message' => 'Mensagem enviada pelo ChatMix.'];
+    }
+    $erros = [400 => 'ChatMix recusou os dados do envio.', 401 => 'ChatMix: key/token inválidos.',
+              403 => 'Limite diário de envios do ChatMix excedido.', 404 => 'Template não encontrado no ChatMix.',
+              429 => 'Muitas requisições ao ChatMix. Aguarde um instante.'];
+    $detalhe = (is_array($dados) && !empty($dados['message'])) ? (is_string($dados['message']) ? $dados['message'] : json_encode($dados['message'], JSON_UNESCAPED_UNICODE)) : '';
+    if (isset($erros[$http])) {
+        $msg = $erros[$http] . ($detalhe !== '' ? ' (' . $detalhe . ')' : '');
+    } else {
+        $msg = $detalhe !== '' ? 'ChatMix: ' . $detalhe : 'ChatMix respondeu com erro (HTTP ' . $http . ').';
+    }
+    return ['ok' => false, 'message' => $msg];
+}

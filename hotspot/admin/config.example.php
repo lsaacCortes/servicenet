@@ -31,3 +31,10 @@ define('ADMIN_INITIAL_PASSWORD', '');
 define('SGP_BASE_URL', 'http://IP_DO_SGP:8000');
 define('SGP_APP',      'SGP');
 define('SGP_TOKEN',    'TROQUE_PELO_TOKEN');
+
+// Pos-venda: API de disparos do ChatMix (menu "Chaves para Acesso").
+define('CHATMIX_URL',   'https://envios.bulkv2.chatmix.com.br/api');
+define('CHATMIX_KEY',   'TROQUE_PELA_KEY');
+define('CHATMIX_TOKEN', 'TROQUE_PELO_TOKEN');
+// Codigo do template aprovado na Meta (vazio = envia texto livre).
+define('CHATMIX_TEMPLATE', '');

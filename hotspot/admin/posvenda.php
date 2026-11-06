@@ -12,7 +12,6 @@ if (empty($_SESSION['csrf'])) {
 }
 $souAdmin  = admin_perfil($pdo) === 'admin';
 $adminNome = $_SESSION['admin_nome'] ?? 'Admin';
-$atendente = trim(explode(' ', trim($adminNome))[0]);
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -148,7 +147,8 @@ $atendente = trim(explode(' ', trim($adminNome))[0]);
             </div>
             <span id="syncInfo" class="pv-muted hidden md:inline"></span>
             <button id="btnSync" class="pv-act pv-reg"><i class="fa-solid fa-arrows-rotate"></i> Sincronizar</button>
-            <button id="btnConfig" class="pv-act pv-reg" title="Configurar data de início" aria-label="Configurar"><i class="fa-solid fa-gear"></i></button>
+            <button id="btnAvulso" class="pv-act pv-reg" title="Enviar mensagem avulsa ou de teste"><i class="fa-brands fa-whatsapp"></i> Enviar teste</button>
+            <button id="btnConfig"class="pv-act pv-reg" title="Configurar data de início" aria-label="Configurar"><i class="fa-solid fa-gear"></i></button>
         </div>
 
         <!-- Filtros -->
@@ -206,6 +206,36 @@ $atendente = trim(explode(' ', trim($adminNome))[0]);
         </div>
     </div>
 
+    <!-- Envio avulso -->
+    <div id="modalAv" class="fixed inset-0 z-50 hidden items-center justify-center p-4 modal-backdrop">
+        <div class="modal-box rounded-2xl w-full max-w-md p-6 relative" role="dialog" aria-modal="true">
+            <button id="aFechar" class="absolute right-4 top-4 text-white opacity-50 hover:opacity-100 text-2xl leading-none" aria-label="Fechar">&times;</button>
+            <h3 class="text-white font-bold text-lg mb-1">Enviar mensagem avulsa</h3>
+            <p class="pv-muted mb-5">Para teste ou envio manual. Não cria nem altera registros da lista.</p>
+            <div class="space-y-4">
+                <div>
+                    <label class="lbl" for="aNome">Nome (usado no template)</label>
+                    <input id="aNome" type="text" maxlength="60" class="modal-input w-full py-2.5 px-3 rounded-xl text-sm">
+                </div>
+                <div>
+                    <label class="lbl" for="aFone">Telefone com DDD</label>
+                    <input id="aFone" type="tel" placeholder="(11) 99999-9999" class="modal-input w-full py-2.5 px-3 rounded-xl text-sm">
+                </div>
+                <div>
+                    <label class="lbl" for="aTexto">Mensagem personalizada (opcional)</label>
+                    <textarea id="aTexto" rows="3" maxlength="1000" placeholder="Deixe vazio para enviar o template de pós-venda."
+                              class="modal-input w-full py-2.5 px-3 rounded-xl text-sm resize-none"></textarea>
+                    <p class="pv-muted mt-1">Texto livre só é entregue se o cliente falou com vocês nas últimas 24h.</p>
+                </div>
+            </div>
+            <p id="aErro" class="text-xs font-semibold mt-3 hidden" style="color:var(--coral);"></p>
+            <div class="flex gap-3 mt-6">
+                <button id="aCancel" class="sn-btn sn-btn-ghost">Cancelar</button>
+                <button id="aEnviar" class="sn-btn sn-btn-primary" <?= $souAdmin ? '' : 'disabled' ?>>Enviar</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Configuracao -->
     <div id="modalCfg" class="fixed inset-0 z-50 hidden items-center justify-center p-4 modal-backdrop">
         <div class="modal-box rounded-2xl w-full max-w-sm p-6 relative" role="dialog" aria-modal="true">
@@ -224,7 +254,6 @@ $atendente = trim(explode(' ', trim($adminNome))[0]);
 
     <script>
     const CSRF = <?= json_encode($_SESSION['csrf']) ?>;
-    const ATENDENTE = <?= json_encode($atendente) ?>;
     const DIAS_ALVO = <?= POSVENDA_DIAS_ALVO ?>;
     const $ = id => document.getElementById(id);
     const RESULTADOS = { satisfeito: 'Cliente satisfeito', problema_resolvido: 'Problema resolvido', precisa_visita: 'Precisa de visita', outro: 'Outro' };
@@ -247,19 +276,6 @@ $atendente = trim(explode(' ', trim($adminNome))[0]);
         const [d, h] = s.split(' ');
         const [y, m, dd] = d.split('-');
         return dd + '/' + m + '/' + y + (comHora && h ? ' ' + h.slice(0, 5) : '');
-    }
-    function foneWhats(t) {
-        let n = (t || '').replace(/\D/g, '');
-        if (n.length < 10) return '';
-        if (!(n.startsWith('55') && n.length >= 12)) n = '55' + n;
-        return n;
-    }
-    function mensagem(r) {
-        const nome = (r.nome || '').trim().split(/\s+/)[0];
-        const cap = nome.charAt(0).toUpperCase() + nome.slice(1).toLowerCase();
-        return 'Olá, ' + cap + '! Aqui é ' + ATENDENTE + ', da ServiceNet. 😊\n\n' +
-            'Já faz cerca de uma semana que sua internet foi ativada e queremos saber: está tudo certo com a sua conexão? ' +
-            'Podemos ajudar em alguma coisa?\n\nSua opinião é muito importante para nós!';
     }
     function rotulo(r) {
         if (r.status === 'pendente') return r.dias < DIAS_ALVO ? ['aguardando', 'Aguardando'] : ['pendente', 'Pendente'];
@@ -347,14 +363,11 @@ $atendente = trim(explode(' ', trim($adminNome))[0]);
         const c4 = el('div', 'c-status'); c4.append(el('span', 'badge badge-' + cls, txt));
 
         const c5 = el('div', 'c-acoes flex gap-2');
-        const num = foneWhats(r.telefone);
-        const wa = el('a', 'pv-act pv-wa' + (num ? '' : ' off'));
-        wa.append(el('i', 'fa-brands fa-whatsapp'), document.createTextNode('WhatsApp'));
-        if (num) {
-            wa.href = 'https://wa.me/' + num + '?text=' + encodeURIComponent(mensagem(r));
-            wa.target = '_blank'; wa.rel = 'noopener';
-            wa.addEventListener('click', () => marcarContato(r));
-        }
+        const temFone = (r.telefone || '').replace(/\D/g, '').length >= 10;
+        const wa = el('button', 'pv-act pv-wa' + (temFone && r.status !== 'concluido' ? '' : ' off')); wa.type = 'button';
+        wa.append(el('i', 'fa-brands fa-whatsapp'), document.createTextNode('Enviar'));
+        wa.title = 'Enviar mensagem de pós-venda pelo WhatsApp oficial (ChatMix)';
+        wa.onclick = () => enviarMensagem(r, wa);
         const reg = el('button', 'pv-act pv-reg'); reg.type = 'button';
         reg.append(el('i', 'fa-solid fa-pen-to-square'), document.createTextNode('Registrar'));
         reg.onclick = () => abrir(r);
@@ -377,12 +390,16 @@ $atendente = trim(explode(' ', trim($adminNome))[0]);
         p.append(mk('Próximo', page + 1, false, page >= total));
     }
 
-    async function marcarContato(r) {
-        if (r.status !== 'pendente') return;
+    async function enviarMensagem(r, btn) {
+        const primeiro = (r.nome || '').trim().split(/\s+/)[0];
+        const ok = await SN.confirm({ title: 'Enviar mensagem', message: 'Enviar a mensagem de pós-venda para ' + primeiro + ' (' + r.telefone + ') pelo WhatsApp oficial?', confirmText: 'Enviar', tone: 'primary' });
+        if (!ok) return;
+        btn.classList.add('off');
         try {
-            const res = await api('contato', { id: r.id });
-            if (res.alterado) { SN.toast('Marcado como "Em contato".', 'info'); carregar(true); }
-        } catch (e) { /* o contato nao deve ser bloqueado por falha no registro */ }
+            const res = await api('enviar', { id: r.id });
+            SN.toast(res.message, res.success ? 'success' : 'error');
+            if (res.success) carregar(true); else btn.classList.remove('off');
+        } catch (e) { if (e.message !== 'sessao') SN.toast('Erro de comunicação.', 'error'); btn.classList.remove('off'); }
     }
 
     // ---- Modal de atendimento ----
@@ -434,6 +451,26 @@ $atendente = trim(explode(' ', trim($adminNome))[0]);
         carregar(true);
     }
 
+    // ---- Envio avulso ----
+    function avErro(m) { $('aErro').textContent = m; $('aErro').classList.remove('hidden'); }
+    async function enviarAvulso() {
+        const nome = $('aNome').value.trim(), fone = $('aFone').value.trim(), texto = $('aTexto').value.trim();
+        if (!nome) return avErro('Informe o nome.');
+        if (fone.replace(/\D/g, '').length < 10) return avErro('Informe o telefone com DDD.');
+        $('aErro').classList.add('hidden');
+        const ok = await SN.confirm({ title: 'Enviar mensagem', message: 'Enviar ' + (texto ? 'a mensagem personalizada' : 'o template de pós-venda') + ' para ' + fone + '?', confirmText: 'Enviar', tone: 'primary' });
+        if (!ok) return;
+        const btn = $('aEnviar'); btn.disabled = true; btn.textContent = 'Enviando...';
+        try {
+            const r = await api('enviar_avulso', { nome, telefone: fone, texto });
+            if (r.success) { mostrar('modalAv', false); SN.toast(r.message); } else avErro(r.message || 'Falha ao enviar.');
+        } catch (e) { if (e.message !== 'sessao') avErro('Erro de comunicação.'); }
+        btn.disabled = false; btn.textContent = 'Enviar';
+    }
+    $('btnAvulso').onclick = () => { $('aErro').classList.add('hidden'); mostrar('modalAv', true); $('aNome').focus(); };
+    $('aCancel').onclick = $('aFechar').onclick = () => mostrar('modalAv', false);
+    $('aEnviar').onclick = enviarAvulso;
+
     // ---- Eventos ----
     document.querySelectorAll('#tabs .tab-btn').forEach(b => b.onclick = () => {
         document.querySelectorAll('#tabs .tab-btn').forEach(x => x.classList.remove('active'));
@@ -453,8 +490,8 @@ $atendente = trim(explode(' ', trim($adminNome))[0]);
             mostrar('modalCfg', false); SN.toast(r.message); sincronizar(false);
         } catch (e) { if (e.message !== 'sessao') SN.toast('Erro de comunicação.', 'error'); }
     };
-    ['modal', 'modalCfg'].forEach(id => $(id).addEventListener('mousedown', e => { if (e.target === $(id)) mostrar(id, false); }));
-    document.addEventListener('keydown', e => { if (e.key === 'Escape') { mostrar('modal', false); mostrar('modalCfg', false); } });
+    ['modal', 'modalCfg', 'modalAv'].forEach(id => $(id).addEventListener('mousedown', e => { if (e.target === $(id)) mostrar(id, false); }));
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') { mostrar('modal', false); mostrar('modalCfg', false); mostrar('modalAv', false); } });
 
     carregar().then(() => sincronizar(true));
     </script>
