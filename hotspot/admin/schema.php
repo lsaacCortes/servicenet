@@ -162,6 +162,52 @@ function ensure_schema(PDO $pdo): void
         $pdo->exec("ALTER TABLE comprovantes MODIFY `cliente_erro` TEXT DEFAULT NULL");
     }
 
+    // IA de atendimento: conversas e mensagens recebidas no canal, e o registro de cada decisao da IA
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS `conversas` (
+            `id`                  INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            `telefone`            VARCHAR(20)  NOT NULL,
+            `nome`                VARCHAR(150) DEFAULT NULL,
+            `cpf_verificado`      VARCHAR(14)  DEFAULT NULL,
+            `cpf_nome`            VARCHAR(60)  DEFAULT NULL,
+            `cpf_verificado_em`   DATETIME DEFAULT NULL,
+            `ultima_msg_em`       DATETIME DEFAULT NULL,
+            `created_at`          DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY `uk_fone` (`telefone`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    ");
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS `mensagens` (
+            `id`             INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            `conversa_id`    INT UNSIGNED NOT NULL,
+            `wamid`          VARCHAR(150) NOT NULL,
+            `direcao`        VARCHAR(12)  NOT NULL,
+            `tipo`           VARCHAR(20)  NOT NULL,
+            `texto`          TEXT DEFAULT NULL,
+            `comprovante_id` INT UNSIGNED DEFAULT NULL,
+            `criado_em`      DATETIME NOT NULL,
+            UNIQUE KEY `uk_wamid` (`wamid`),
+            KEY `idx_conversa` (`conversa_id`, `id`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    ");
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS `ia_log` (
+            `id`          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            `conversa_id` INT UNSIGNED NOT NULL,
+            `mensagem_id` INT UNSIGNED NOT NULL,
+            `modo`        VARCHAR(10)  NOT NULL,
+            `decisao`     VARCHAR(20)  NOT NULL,
+            `resposta`    TEXT DEFAULT NULL,
+            `ferramentas` VARCHAR(200) DEFAULT NULL,
+            `detalhes`    TEXT DEFAULT NULL,
+            `erro`        VARCHAR(250) DEFAULT NULL,
+            `duracao_ms`  INT UNSIGNED DEFAULT NULL,
+            `created_at`  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            KEY `idx_created` (`created_at`),
+            KEY `idx_conversa` (`conversa_id`, `created_at`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    ");
+
     // Tabelas criadas antes do historico de acessos
     if (!$pdo->query("SHOW COLUMNS FROM hotspot_logins LIKE 'encerrado_em'")->fetch()) {
         $pdo->exec("ALTER TABLE hotspot_logins

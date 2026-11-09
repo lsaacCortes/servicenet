@@ -101,6 +101,19 @@ try {
         $pdo = getDB();
         ensure_schema($pdo);
         comprovantes_processar($pdo, $json);
+
+        // Conversas e IA (modo sombra): registra as mensagens e, se ligada, analisa cada nova
+        require_once __DIR__ . '/ia_lib.php';
+        $novas = ia_registrar_mensagens($pdo, $json);
+        if (ia_ativa()) {
+            foreach ($novas as $idMsg) {
+                try {
+                    ia_processar_mensagem($pdo, $idMsg);
+                } catch (Throwable $e) {
+                    error_log('ia: ' . $e->getMessage());
+                }
+            }
+        }
     }
 } catch (Throwable $e) {
     error_log('chatmix_webhook: ' . $e->getMessage());

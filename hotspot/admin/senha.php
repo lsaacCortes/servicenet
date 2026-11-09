@@ -89,6 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </a>
             <a href="posvenda.php" class="nav-item"><i class="fa-solid fa-headset w-5 text-center"></i><span>Pós-venda</span></a>
             <a href="comprovantes.php" class="nav-item"><i class="fa-solid fa-file-invoice-dollar w-5 text-center"></i><span>Comprovantes</span></a>
+            <a href="ia_conversas.php" class="nav-item"><i class="fa-solid fa-robot w-5 text-center"></i><span>IA (sombra)</span></a>
             <a href="rede.php" class="nav-item">
                 <i class="fa-solid fa-network-wired w-5 text-center"></i>
                 <span>Rede</span>
