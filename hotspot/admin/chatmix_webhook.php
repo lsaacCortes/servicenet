@@ -75,6 +75,23 @@ if (trim($corpo) === '') {
 
 wh_gravar('ok', $corpo);
 
+// Responde ao ChatMix ja e continua o processamento (download na Meta e consulta ao SGP podem demorar)
+ignore_user_abort(true);
+@set_time_limit(90);
+$resposta = json_encode(['ok' => true, 'message' => 'Recebido.']);
+http_response_code(200);
+header('Content-Length: ' . strlen($resposta));
+header('Connection: close');
+echo $resposta;
+if (function_exists('fastcgi_finish_request')) {
+    fastcgi_finish_request();
+} else {
+    while (ob_get_level() > 0) {
+        @ob_end_flush();
+    }
+    flush();
+}
+
 // Extrai os comprovantes (imagem/PDF). Falha aqui nao pode fazer o ChatMix reenviar o evento.
 try {
     $json = json_decode($corpo, true);
@@ -88,4 +105,3 @@ try {
 } catch (Throwable $e) {
     error_log('chatmix_webhook: ' . $e->getMessage());
 }
-wh_out(200, 'Recebido.');

@@ -47,6 +47,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ->execute([$novo, $adminNome, $nota, $id]);
         admin_log($pdo, 'comprovante_' . $novo, $c['nome'] ?: $c['telefone'], 'comprovante #' . $id);
         $_SESSION['flash'] = ['success', $acao === 'baixar' ? 'Baixa registrada.' : 'Comprovante descartado.'];
+    } elseif ($acao === 'identificar') {
+        [$oki, $msgi] = comprovantes_identificar($pdo, $id);
+        $_SESSION['flash'] = [$oki ? 'success' : 'error', $msgi];
     } elseif ($acao === 'rebaixar') {
         [$okb, $msgb] = comprovantes_rebaixar($pdo, $id);
         $_SESSION['flash'] = [$okb ? 'success' : 'error', $msgb];
@@ -235,6 +238,32 @@ function url_pagina(array $over): string
                             <i class="fa-brands fa-whatsapp"></i> <?= $h(comprovantes_fone_fmt($c['telefone'])) ?>
                         </a>
                     </p>
+                    <?php
+                        $clientes = $c['cliente_json'] ? (json_decode($c['cliente_json'], true) ?: []) : [];
+                        $cs = $c['cliente_status'];
+                    ?>
+                    <?php if ($cs === 'unico' || $cs === 'varios'): ?>
+                        <div class="mt-2 text-xs" style="color:var(--w70);">
+                        <?php foreach (array_slice($clientes, 0, 3) as $cl):
+                            $docm = comprovantes_doc_mascarado((string) ($cl['cpf'] ?? ''));
+                            $ctr = array_map(fn($x) => '#' . ($x['id'] ?? '?') . ' ' . ($x['status'] ?? ''), array_slice($cl['contratos'] ?? [], 0, 3));
+                            $primeiro = explode(' ', comprovantes_norm((string) $c['nome']))[0];
+                            $difere = $cs === 'unico' && $primeiro !== '' && strpos(comprovantes_norm((string) $cl['nome']), $primeiro) === false;
+                        ?>
+                            <p><i class="fa-solid fa-user-check" style="color:var(--green);"></i>
+                                <b class="text-white"><?= $h($cl['nome']) ?></b><?= $docm ? ' · ' . $h($docm) : '' ?><br>
+                                <span class="cp-muted">Contrato <?= $h(implode(' · ', $ctr)) ?></span></p>
+                            <?php if ($difere): ?>
+                                <p style="color:#fbbf24;"><i class="fa-solid fa-triangle-exclamation"></i> Nome do WhatsApp difere do titular — pode ser outra pessoa pagando.</p>
+                            <?php endif; ?>
+                        <?php endforeach; ?>
+                        <?php if ($cs === 'varios'): ?><p style="color:#fbbf24;">Mais de um cliente com esse telefone — confira o comprovante.</p><?php endif; ?>
+                        </div>
+                    <?php elseif ($cs === 'nenhum'): ?>
+                        <p class="cp-muted mt-2"><i class="fa-solid fa-user-slash"></i> Telefone não encontrado no SGP.</p>
+                    <?php elseif ($cs === 'erro'): ?>
+                        <p class="cp-muted mt-2" style="color:#ff4c30;"><i class="fa-solid fa-triangle-exclamation"></i> SGP: <?= $h($c['cliente_erro']) ?></p>
+                    <?php endif; ?>
                     <?php if (!$temArq): ?>
                         <p class="cp-muted mt-1" style="color:#ff4c30;"><i class="fa-solid fa-triangle-exclamation"></i>
                             <?= $h($c['erro_midia'] ?: 'Arquivo não baixado') ?></p>
@@ -251,6 +280,14 @@ function url_pagina(array $over): string
                 </div>
                 <div class="c-acoes flex flex-col gap-2">
                     <?php if ($souAdmin): ?>
+                        <?php if ($cs !== 'unico'): ?>
+                            <form method="post">
+                                <input type="hidden" name="csrf" value="<?= $h($_SESSION['csrf']) ?>">
+                                <input type="hidden" name="id" value="<?= (int) $c['id'] ?>">
+                                <input type="hidden" name="acao" value="identificar">
+                                <button class="cp-act w-full"><i class="fa-solid fa-user-magnifying-glass"></i> Identificar cliente</button>
+                            </form>
+                        <?php endif; ?>
                         <?php if (!$temArq): ?>
                             <form method="post">
                                 <input type="hidden" name="csrf" value="<?= $h($_SESSION['csrf']) ?>">

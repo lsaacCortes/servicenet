@@ -166,6 +166,153 @@ function comprovantes_rebaixar(PDO $pdo, int $id): array
     return $arq ? [true, 'Arquivo baixado.'] : [false, 'Não foi possível baixar: ' . $erro];
 }
 
+// ---------------------------------------------------------------
+// Identificacao do cliente no SGP pelo telefone de quem enviou
+// ---------------------------------------------------------------
+
+const COMPROVANTE_SGP_MAX_CLIENTES = 5; // mais que isso = o SGP provavelmente ignorou o filtro
+
+// Formas em que o numero pode estar cadastrado: so DDD+numero, com e sem o 9 do celular.
+function comprovantes_fone_variantes(string $f): array
+{
+    $f = preg_replace('/\D/', '', $f);
+    if (strpos($f, '55') === 0 && strlen($f) >= 12) {
+        $f = substr($f, 2);
+    }
+    $v = [$f];
+    if (strlen($f) === 10 && $f[2] >= '6') {
+        $v[] = substr($f, 0, 2) . '9' . substr($f, 2);   // celular sem o 9
+    } elseif (strlen($f) === 11 && $f[2] === '9') {
+        $v[] = substr($f, 0, 2) . substr($f, 3);         // celular cadastrado sem o 9
+    }
+    return array_values(array_unique($v));
+}
+
+function comprovantes_primeiro(array $a, array $chaves)
+{
+    foreach ($chaves as $k) {
+        if (isset($a[$k]) && $a[$k] !== '' && !is_array($a[$k])) {
+            return $a[$k];
+        }
+    }
+    return null;
+}
+
+// Consulta o SGP. Devolve ['ok'=>bool, 'clientes'=>[['nome','cpf','contratos'=>[['id','status']]]], 'message'=>string]
+function comprovantes_sgp_por_telefone(string $telefone): array
+{
+    if (!defined('SGP_BASE_URL') || !defined('SGP_TOKEN') || SGP_TOKEN === '') {
+        return ['ok' => false, 'clientes' => [], 'message' => 'SGP não configurado no config.php'];
+    }
+    $ch = curl_init(rtrim(SGP_BASE_URL, '/') . '/api/ura/consultacliente/');
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_CONNECTTIMEOUT => 5,
+        CURLOPT_TIMEOUT        => 10,
+        CURLOPT_POST           => true,
+        CURLOPT_POSTFIELDS     => [
+            'app'      => defined('SGP_APP') ? SGP_APP : 'SGP',
+            'token'    => SGP_TOKEN,
+            'telefone' => $telefone,
+        ],
+    ]);
+    $resp = curl_exec($ch);
+    $http = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    if ($resp === false) {
+        return ['ok' => false, 'clientes' => [], 'message' => 'Não foi possível conectar ao SGP'];
+    }
+    $dados = json_decode($resp, true);
+    // O SGP pode responder erro/nao encontrado com 4xx; sem contratos tratamos como "nenhum"
+    if (!is_array($dados)) {
+        return ['ok' => false, 'clientes' => [], 'message' => 'SGP respondeu HTTP ' . $http . ' fora do formato esperado'];
+    }
+    $contratos = $dados['contratos'] ?? [];
+    if (!is_array($contratos) || !$contratos) {
+        return $http >= 500
+            ? ['ok' => false, 'clientes' => [], 'message' => 'SGP respondeu HTTP ' . $http]
+            : ['ok' => true, 'clientes' => [], 'message' => ''];
+    }
+
+    $clientes = [];
+    foreach ($contratos as $ct) {
+        if (!is_array($ct)) continue;
+        $nome = comprovantes_primeiro($ct, ['razaosocial', 'razao_social', 'nome', 'nome_razaosocial', 'cliente_nome']);
+        $cpf  = preg_replace('/\D/', '', (string) comprovantes_primeiro($ct, ['cpfcnpj', 'cpf_cnpj', 'cpf']));
+        if ($nome === null && $cpf === '') {
+            return ['ok' => false, 'clientes' => [], 'message' => 'Resposta do SGP sem nome/CPF. Campos recebidos: '
+                . mb_substr(implode(', ', array_keys($ct)), 0, 150)];
+        }
+        $chave = $cpf !== '' ? $cpf : mb_strtolower((string) $nome);
+        $clientes[$chave]['nome'] = mb_substr(trim((string) $nome), 0, 150);
+        $clientes[$chave]['cpf']  = $cpf;
+        $clientes[$chave]['contratos'][] = [
+            'id'     => comprovantes_primeiro($ct, ['contratoId', 'contrato_id', 'id_contrato', 'contrato']),
+            'status' => comprovantes_primeiro($ct, ['contratoStatusDisplay', 'status_display', 'status']),
+        ];
+    }
+    return ['ok' => true, 'clientes' => array_values($clientes), 'message' => ''];
+}
+
+// Procura o cliente do comprovante no SGP e grava o resultado. Devolve [ok, mensagem].
+function comprovantes_identificar(PDO $pdo, int $id): array
+{
+    $st = $pdo->prepare("SELECT telefone FROM comprovantes WHERE id = ?");
+    $st->execute([$id]);
+    $fone = $st->fetchColumn();
+    if ($fone === false) {
+        return [false, 'Comprovante não encontrado.'];
+    }
+
+    $res = ['ok' => true, 'clientes' => [], 'message' => ''];
+    foreach (comprovantes_fone_variantes((string) $fone) as $var) {
+        $res = comprovantes_sgp_por_telefone($var);
+        if (!$res['ok'] || $res['clientes']) {
+            break; // erro ou achou: nao precisa tentar a outra forma do numero
+        }
+    }
+
+    $n = count($res['clientes']);
+    if (!$res['ok']) {
+        $status = 'erro';
+    } elseif ($n === 0) {
+        $status = 'nenhum';
+    } elseif ($n > COMPROVANTE_SGP_MAX_CLIENTES) {
+        $status = 'erro';
+        $res['message'] = $n . ' clientes retornados: o filtro de telefone parece não ter sido aplicado';
+        $res['clientes'] = [];
+    } else {
+        $status = $n === 1 ? 'unico' : 'varios';
+    }
+
+    $pdo->prepare("UPDATE comprovantes SET cliente_status = ?, cliente_json = ?, cliente_erro = ?, identificado_em = NOW() WHERE id = ?")
+        ->execute([
+            $status,
+            $res['clientes'] ? json_encode($res['clientes'], JSON_UNESCAPED_UNICODE) : null,
+            $res['message'] !== '' ? mb_substr($res['message'], 0, 250) : null,
+            $id,
+        ]);
+
+    $msgs = ['unico' => 'Cliente identificado.', 'varios' => 'Há mais de um cliente com esse telefone.',
+             'nenhum' => 'Telefone não encontrado no SGP.', 'erro' => 'Falha na consulta: ' . $res['message']];
+    return [$status !== 'erro', $msgs[$status]];
+}
+
+// CPF/CNPJ parcialmente oculto
+function comprovantes_doc_mascarado(string $d): string
+{
+    if (strlen($d) === 11) return mask_cpf($d);
+    if (strlen($d) === 14) return substr($d, 0, 2) . '.***.***/' . substr($d, 8, 4) . '-' . substr($d, 12);
+    return '';
+}
+
+function comprovantes_norm(string $s): string
+{
+    $s = mb_strtolower(trim($s));
+    return preg_replace('/[^a-z ]/', '', strtr($s, ['á'=>'a','à'=>'a','â'=>'a','ã'=>'a','é'=>'e','ê'=>'e','í'=>'i','ó'=>'o','ô'=>'o','õ'=>'o','ú'=>'u','ç'=>'c']));
+}
+
 // Registra os comprovantes de um payload. Devolve quantos novos foram gravados.
 function comprovantes_processar(PDO $pdo, array $payload): int
 {
@@ -186,7 +333,14 @@ function comprovantes_processar(PDO $pdo, array $payload): int
             mb_substr($c['nome_arquivo'], 0, 150) ?: null, mb_substr($c['legenda'], 0, 500) ?: null,
             $c['media_id'] ?: null, $c['media_url'] ?: null, $arquivo, $erro ? mb_substr($erro, 0, 250) : null, $c['recebido_em'],
         ]);
-        $novos += $ins->rowCount();
+        if ($ins->rowCount() > 0) {
+            $novos++;
+            try {
+                comprovantes_identificar($pdo, (int) $pdo->lastInsertId());
+            } catch (Throwable $e) {
+                // a identificacao pode ser refeita pelo botao na pagina
+            }
+        }
     }
     return $novos;
 }

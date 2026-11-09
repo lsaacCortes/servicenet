@@ -147,6 +147,15 @@ function ensure_schema(PDO $pdo): void
         $pdo->exec("ALTER TABLE comprovantes ADD COLUMN `erro_midia` VARCHAR(250) DEFAULT NULL AFTER `arquivo`");
     }
 
+    if (!$pdo->query("SHOW COLUMNS FROM comprovantes LIKE 'cliente_status'")->fetch()) {
+        // Resultado da busca do cliente no SGP pelo telefone: unico | varios | nenhum | erro
+        $pdo->exec("ALTER TABLE comprovantes
+            ADD COLUMN `cliente_status` VARCHAR(10) DEFAULT NULL,
+            ADD COLUMN `cliente_json` TEXT DEFAULT NULL,
+            ADD COLUMN `cliente_erro` VARCHAR(250) DEFAULT NULL,
+            ADD COLUMN `identificado_em` DATETIME DEFAULT NULL");
+    }
+
     // Tabelas criadas antes do historico de acessos
     if (!$pdo->query("SHOW COLUMNS FROM hotspot_logins LIKE 'encerrado_em'")->fetch()) {
         $pdo->exec("ALTER TABLE hotspot_logins
