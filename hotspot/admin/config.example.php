@@ -45,16 +45,3 @@ define('CHATMIX_WEBHOOK_SECRET', '');
 // Opcional: token de acesso da Meta (WhatsApp Business) para baixar a imagem/PDF dos comprovantes.
 // Sem ele a pagina de comprovantes lista quem enviou e quando, mas nao mostra o arquivo.
 define('META_WHATSAPP_TOKEN', '');
-// ID do numero de WhatsApp na Meta (aparece como metadata.phone_number_id no payload do webhook).
-// Usado para ENVIAR mensagens de texto pela API da Meta.
-define('META_PHONE_NUMBER_ID', '');
-
-// IA de atendimento (Google Gemini). Chave criada no Google AI Studio.
-define('GEMINI_API_KEY', '');
-define('GEMINI_MODEL',   'gemini-3.8-flash');
-// Nivel de raciocinio do modelo: 'minimal', 'low' (padrao), 'medium', 'high'. Menos = resposta mais rapida.
-define('GEMINI_THINKING', 'low');
-// '' = desligada | 'sombra' = analisa e registra o que responderia, SEM enviar nada ao cliente.
-define('IA_MODO', '');
-// Para onde a IA encaminha o que nao consegue resolver (so digitos, DDD + numero).
-define('IA_ATENDIMENTO_FONE', '73999547814');
