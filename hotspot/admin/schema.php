@@ -98,6 +98,21 @@ function ensure_schema(PDO $pdo): void
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     ");
 
+    // Webhook de canal do ChatMix: guarda o payload bruto de cada evento recebido
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS `chatmix_eventos` (
+            `id`         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            `payload`    MEDIUMTEXT NOT NULL,
+            `ip_origem`  VARCHAR(45) DEFAULT NULL,
+            `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            KEY `idx_created` (`created_at`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    ");
+
+    if (!$pdo->query("SHOW COLUMNS FROM chatmix_eventos LIKE 'cabecalhos'")->fetch()) {
+        $pdo->exec("ALTER TABLE chatmix_eventos ADD COLUMN `cabecalhos` TEXT DEFAULT NULL AFTER `payload`");
+    }
+
     // Tabelas criadas antes do historico de acessos
     if (!$pdo->query("SHOW COLUMNS FROM hotspot_logins LIKE 'encerrado_em'")->fetch()) {
         $pdo->exec("ALTER TABLE hotspot_logins

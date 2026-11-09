@@ -38,3 +38,7 @@ define('CHATMIX_KEY',   'TROQUE_PELA_KEY');
 define('CHATMIX_TOKEN', 'TROQUE_PELO_TOKEN');
 // Codigo do template aprovado na Meta (vazio = envia texto livre).
 define('CHATMIX_TEMPLATE', '');
+// Webhook de canal do ChatMix (comprovantes recebidos): segredo que vai na URL cadastrada
+// no ChatMix:  https://SEU_DOMINIO/hotspot/admin/chatmix_webhook.php?s=SEGREDO
+// Gere um valor longo e aleatorio. Vazio = webhook desativado.
+define('CHATMIX_WEBHOOK_SECRET', '');
