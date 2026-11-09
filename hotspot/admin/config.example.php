@@ -51,7 +51,9 @@ define('META_PHONE_NUMBER_ID', '');
 
 // IA de atendimento (Google Gemini). Chave criada no Google AI Studio.
 define('GEMINI_API_KEY', '');
-define('GEMINI_MODEL',   'gemini-2.5-flash');
+define('GEMINI_MODEL',   'gemini-3.8-flash');
+// Nivel de raciocinio do modelo: 'minimal', 'low' (padrao), 'medium', 'high'. Menos = resposta mais rapida.
+define('GEMINI_THINKING', 'low');
 // '' = desligada | 'sombra' = analisa e registra o que responderia, SEM enviar nada ao cliente.
 define('IA_MODO', '');
 // Para onde a IA encaminha o que nao consegue resolver (so digitos, DDD + numero).

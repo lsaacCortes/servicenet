@@ -309,9 +309,15 @@ function ia_executar_ferramenta(PDO $pdo, array &$conversa, string $nome, array 
 // Chamada ao Gemini
 // ---------------------------------------------------------------
 
-function ia_gemini(array $body, int $timeout = 45): array
+function ia_gemini(array $body, int $timeout = 60, bool $comRaciocinioReduzido = true): array
 {
-    $modelo = defined('GEMINI_MODEL') && GEMINI_MODEL !== '' ? GEMINI_MODEL : 'gemini-2.5-flash';
+    $modelo = defined('GEMINI_MODEL') && GEMINI_MODEL !== '' ? GEMINI_MODEL : 'gemini-3.8-flash';
+    // Pede pouco "raciocinio" ao modelo: atendimento simples nao precisa e a resposta fica bem mais rapida.
+    // GEMINI_THINKING no config.php muda o nivel ('minimal', 'low', 'medium', 'high') ou '' para nao enviar.
+    $nivel = defined('GEMINI_THINKING') ? trim((string) GEMINI_THINKING) : 'low';
+    if ($comRaciocinioReduzido && $nivel !== '') {
+        $body['generationConfig']['thinkingConfig'] = ['thinkingLevel' => $nivel];
+    }
     $ch = curl_init('https://generativelanguage.googleapis.com/v1beta/models/' . rawurlencode($modelo) . ':generateContent');
     curl_setopt_array($ch, [
         CURLOPT_RETURNTRANSFER => true,
@@ -332,6 +338,10 @@ function ia_gemini(array $body, int $timeout = 45): array
     $j = json_decode($resp, true);
     if ($http !== 200 || !is_array($j)) {
         $m = is_array($j) ? (string) ($j['error']['message'] ?? '') : '';
+        // Modelo que nao aceita o parametro de raciocinio: tenta de novo sem ele
+        if ($http === 400 && $comRaciocinioReduzido && $nivel !== '' && stripos($m, 'thinking') !== false) {
+            return ia_gemini($body, $timeout, false);
+        }
         if ($http === 429) {
             return [false, null, 'cota do Gemini esgotada (HTTP 429)'];
         }
