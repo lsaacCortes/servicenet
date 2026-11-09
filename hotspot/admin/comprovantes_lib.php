@@ -188,11 +188,24 @@ function comprovantes_fone_variantes(string $f): array
     return array_values(array_unique($v));
 }
 
+// Primeiro valor escalar encontrado entre as chaves candidatas, ignorando maiusculas e "_"
+// (o SGP mistura razaosocial, contratoId, popNome...). Tambem olha dentro de um bloco "cliente".
 function comprovantes_primeiro(array $a, array $chaves)
 {
+    $norm = fn($s) => strtolower(str_replace('_', '', (string) $s));
+    $blocos = [$a];
+    foreach (['cliente', 'cadastro'] as $b) {
+        if (isset($a[$b]) && is_array($a[$b])) {
+            $blocos[] = $a[$b];
+        }
+    }
     foreach ($chaves as $k) {
-        if (isset($a[$k]) && $a[$k] !== '' && !is_array($a[$k])) {
-            return $a[$k];
+        foreach ($blocos as $bloco) {
+            foreach ($bloco as $ck => $v) {
+                if ($norm($ck) === $norm($k) && $v !== '' && $v !== null && !is_array($v)) {
+                    return $v;
+                }
+            }
         }
     }
     return null;
@@ -238,11 +251,11 @@ function comprovantes_sgp_por_telefone(string $telefone): array
     $clientes = [];
     foreach ($contratos as $ct) {
         if (!is_array($ct)) continue;
-        $nome = comprovantes_primeiro($ct, ['razaosocial', 'razao_social', 'nome', 'nome_razaosocial', 'cliente_nome']);
-        $cpf  = preg_replace('/\D/', '', (string) comprovantes_primeiro($ct, ['cpfcnpj', 'cpf_cnpj', 'cpf']));
+        $nome = comprovantes_primeiro($ct, ['razaosocial', 'nome', 'nomerazaosocial', 'clienteNome', 'nomeCliente', 'nome_cliente']);
+        $cpf  = preg_replace('/\D/', '', (string) comprovantes_primeiro($ct, ['cpfcnpj', 'cpf', 'cnpj', 'documento']));
         if ($nome === null && $cpf === '') {
-            return ['ok' => false, 'clientes' => [], 'message' => 'Resposta do SGP sem nome/CPF. Campos recebidos: '
-                . mb_substr(implode(', ', array_keys($ct)), 0, 150)];
+            return ['ok' => false, 'clientes' => [], 'message' => 'Resposta do SGP sem nome/CPF. Campos: '
+                . mb_substr(implode(',', array_keys($ct)), 0, 1200)];
         }
         $chave = $cpf !== '' ? $cpf : mb_strtolower((string) $nome);
         $clientes[$chave]['nome'] = mb_substr(trim((string) $nome), 0, 150);
@@ -290,7 +303,7 @@ function comprovantes_identificar(PDO $pdo, int $id): array
         ->execute([
             $status,
             $res['clientes'] ? json_encode($res['clientes'], JSON_UNESCAPED_UNICODE) : null,
-            $res['message'] !== '' ? mb_substr($res['message'], 0, 250) : null,
+            $res['message'] !== '' ? mb_substr($res["message"], 0, 1500) : null,
             $id,
         ]);
 

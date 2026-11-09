@@ -156,6 +156,12 @@ function ensure_schema(PDO $pdo): void
             ADD COLUMN `identificado_em` DATETIME DEFAULT NULL");
     }
 
+    // A mensagem de erro do SGP lista os campos recebidos e pode ser longa
+    if (!$pdo->query("SHOW COLUMNS FROM comprovantes WHERE Field = 'cliente_erro' AND Type LIKE 'text%'")->fetch()
+        && $pdo->query("SHOW COLUMNS FROM comprovantes LIKE 'cliente_erro'")->fetch()) {
+        $pdo->exec("ALTER TABLE comprovantes MODIFY `cliente_erro` TEXT DEFAULT NULL");
+    }
+
     // Tabelas criadas antes do historico de acessos
     if (!$pdo->query("SHOW COLUMNS FROM hotspot_logins LIKE 'encerrado_em'")->fetch()) {
         $pdo->exec("ALTER TABLE hotspot_logins
