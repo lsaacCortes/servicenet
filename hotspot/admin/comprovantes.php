@@ -223,7 +223,8 @@ function url_pagina(array $over): string
             <div class="cp-row <?= $antigo ? 'antigo' : '' ?>">
                 <div>
                     <?php if ($temArq): ?>
-                        <a href="comprovante_arquivo.php?id=<?= (int) $c['id'] ?>" target="_blank" rel="noopener" class="cp-thumb" title="Abrir comprovante">
+                        <a href="comprovante_arquivo.php?id=<?= (int) $c['id'] ?>" target="_blank" rel="noopener" class="cp-thumb js-ver" data-id="<?= (int) $c['id'] ?>" data-img="<?= $ehImg ? '1' : '0' ?>"
+                           data-titulo="<?= $h($nome . ' · ' . date('d/m/Y H:i', strtotime($c['recebido_em']))) ?>" title="Ver comprovante">
                             <?php if ($ehImg): ?><img src="comprovante_arquivo.php?id=<?= (int) $c['id'] ?>" alt="Comprovante" loading="lazy">
                             <?php else: ?><span><i class="fa-solid fa-file-pdf text-2xl"></i><br>PDF</span><?php endif; ?>
                         </a>
@@ -334,6 +335,59 @@ function url_pagina(array $over): string
         <?php endif; ?>
     </main>
 
+    <!-- Visualizador do comprovante -->
+    <div id="viewer" class="fixed inset-0 z-50 hidden items-center justify-center p-4 modal-backdrop" role="dialog" aria-modal="true" aria-label="Comprovante">
+        <div class="modal-box rounded-2xl w-full relative flex flex-col" style="max-width: 960px; max-height: 92vh;">
+            <div class="flex items-center justify-between gap-3 px-5 py-3" style="border-bottom: 1px solid var(--w10);">
+                <p id="vTitulo" class="text-white text-sm font-semibold truncate"></p>
+                <div class="flex items-center gap-3 shrink-0">
+                    <a id="vAbrir" href="#" target="_blank" rel="noopener" class="text-xs opacity-60 hover:opacity-100 text-white" title="Abrir em nova aba">
+                        <i class="fa-solid fa-up-right-from-square"></i></a>
+                    <button id="vFechar" type="button" class="text-white opacity-60 hover:opacity-100 text-2xl leading-none" aria-label="Fechar">&times;</button>
+                </div>
+            </div>
+            <div id="vCorpo" class="flex-1 overflow-auto flex items-center justify-center p-3" style="min-height: 200px;"></div>
+        </div>
+    </div>
+    <script>
+    (function () {
+        const modal = document.getElementById('viewer');
+        const corpo = document.getElementById('vCorpo');
+        function fechar() {
+            modal.classList.add('hidden'); modal.classList.remove('flex');
+            corpo.innerHTML = '';
+            document.body.style.overflow = '';
+        }
+        function abrir(a) {
+            const url = 'comprovante_arquivo.php?id=' + encodeURIComponent(a.dataset.id);
+            document.getElementById('vTitulo').textContent = a.dataset.titulo || '';
+            document.getElementById('vAbrir').href = url;
+            corpo.innerHTML = '';
+            let el;
+            if (a.dataset.img === '1') {
+                el = document.createElement('img');
+                el.alt = 'Comprovante';
+                el.style.cssText = 'max-width:100%; max-height:80vh; border-radius:8px; object-fit:contain;';
+            } else {
+                el = document.createElement('iframe');
+                el.title = 'Comprovante';
+                el.style.cssText = 'width:100%; height:80vh; border:0; border-radius:8px; background:#fff;';
+            }
+            el.src = url;
+            corpo.append(el);
+            modal.classList.remove('hidden'); modal.classList.add('flex');
+            document.body.style.overflow = 'hidden';
+            document.getElementById('vFechar').focus();
+        }
+        document.addEventListener('click', e => {
+            const a = e.target.closest('.js-ver');
+            if (a) { e.preventDefault(); abrir(a); }
+        });
+        document.getElementById('vFechar').addEventListener('click', fechar);
+        modal.addEventListener('mousedown', e => { if (e.target === modal) fechar(); });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape' && !modal.classList.contains('hidden')) fechar(); });
+    })();
+    </script>
     <script src="assets/ui.js?v=<?= filemtime(__DIR__ . '/assets/ui.js') ?>" defer></script>
     <?php if ($flash): ?>
     <script>
