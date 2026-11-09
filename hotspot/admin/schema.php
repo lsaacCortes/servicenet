@@ -113,6 +113,10 @@ function ensure_schema(PDO $pdo): void
         $pdo->exec("ALTER TABLE chatmix_eventos ADD COLUMN `cabecalhos` TEXT DEFAULT NULL AFTER `payload`");
     }
 
+    if (!$pdo->query("SHOW COLUMNS FROM chatmix_eventos LIKE 'resultado'")->fetch()) {
+        $pdo->exec("ALTER TABLE chatmix_eventos ADD COLUMN `resultado` VARCHAR(60) NOT NULL DEFAULT 'ok' AFTER `cabecalhos`");
+    }
+
     // Tabelas criadas antes do historico de acessos
     if (!$pdo->query("SHOW COLUMNS FROM hotspot_logins LIKE 'encerrado_em'")->fetch()) {
         $pdo->exec("ALTER TABLE hotspot_logins

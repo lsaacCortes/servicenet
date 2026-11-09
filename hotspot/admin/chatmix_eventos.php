@@ -13,7 +13,7 @@ if (admin_perfil($pdo) !== 'admin') {
     exit('Acesso restrito a administradores.');
 }
 
-$linhas = $pdo->query("SELECT id, payload, cabecalhos, ip_origem, created_at FROM chatmix_eventos ORDER BY id DESC LIMIT 20")->fetchAll();
+$linhas = $pdo->query("SELECT id, payload, cabecalhos, resultado, ip_origem, created_at FROM chatmix_eventos ORDER BY id DESC LIMIT 20")->fetchAll();
 $h = fn($s) => htmlspecialchars((string) $s, ENT_QUOTES, 'UTF-8');
 ?>
 <!doctype html>
@@ -40,7 +40,7 @@ $h = fn($s) => htmlspecialchars((string) $s, ENT_QUOTES, 'UTF-8');
     $txt = $j !== null ? json_encode($j, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : $l['payload'];
 ?>
     <div class="ev">
-        <small>#<?= (int) $l['id'] ?> · <?= $h($l['created_at']) ?> · <?= $h($l['ip_origem']) ?></small>
+        <small>#<?= (int) $l['id'] ?> · <?= $h($l['created_at']) ?> · <?= $h($l['ip_origem']) ?> · <b><?= $h($l['resultado']) ?></b></small>
         <pre><?= $h($txt) ?></pre>
         <details><summary><small>headers</small></summary>
             <pre><?= $h($l['cabecalhos']) ?></pre>
