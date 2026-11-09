@@ -117,6 +117,32 @@ function ensure_schema(PDO $pdo): void
         $pdo->exec("ALTER TABLE chatmix_eventos ADD COLUMN `resultado` VARCHAR(60) NOT NULL DEFAULT 'ok' AFTER `cabecalhos`");
     }
 
+    // Comprovantes recebidos pelo canal do ChatMix, pendentes de baixa no sistema de clientes
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS `comprovantes` (
+            `id`           INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            `wamid`        VARCHAR(150) NOT NULL,
+            `telefone`     VARCHAR(20)  NOT NULL,
+            `nome`         VARCHAR(150) DEFAULT NULL,
+            `tipo`         VARCHAR(20)  NOT NULL,
+            `mime`         VARCHAR(80)  DEFAULT NULL,
+            `nome_arquivo` VARCHAR(150) DEFAULT NULL,
+            `legenda`      VARCHAR(500) DEFAULT NULL,
+            `media_id`     VARCHAR(60)  DEFAULT NULL,
+            `media_url`    TEXT DEFAULT NULL,
+            `arquivo`      VARCHAR(80)  DEFAULT NULL,
+            `recebido_em`  DATETIME NOT NULL,
+            `status`       ENUM('pendente','baixado','descartado') NOT NULL DEFAULT 'pendente',
+            `baixado_por`  VARCHAR(100) DEFAULT NULL,
+            `baixado_em`   DATETIME DEFAULT NULL,
+            `anotacao`     VARCHAR(255) DEFAULT NULL,
+            `created_at`   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY `uk_wamid` (`wamid`),
+            KEY `idx_status` (`status`, `recebido_em`),
+            KEY `idx_fone` (`telefone`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    ");
+
     // Tabelas criadas antes do historico de acessos
     if (!$pdo->query("SHOW COLUMNS FROM hotspot_logins LIKE 'encerrado_em'")->fetch()) {
         $pdo->exec("ALTER TABLE hotspot_logins

@@ -54,7 +54,9 @@ $secret = defined('CHATMIX_WEBHOOK_SECRET') ? (string) CHATMIX_WEBHOOK_SECRET : 
 if ($secret === '') {
     wh_out(503, 'Webhook desativado.');
 }
-if (!hash_equals($secret, (string) ($_GET['s'] ?? ''))) {
+// O ChatMix manda o segredo no header X-Webhook-Secret; tambem aceita ?s= na URL
+$enviado = (string) ($_SERVER['HTTP_X_WEBHOOK_SECRET'] ?? ($_GET['s'] ?? ''));
+if (!hash_equals($secret, $enviado)) {
     wh_gravar('recusado: segredo errado', $corpo);
     wh_out(403, 'Acesso negado.');
 }
@@ -68,4 +70,18 @@ if (trim($corpo) === '') {
 }
 
 wh_gravar('ok', $corpo);
+
+// Extrai os comprovantes (imagem/PDF). Falha aqui nao pode fazer o ChatMix reenviar o evento.
+try {
+    $json = json_decode($corpo, true);
+    if (is_array($json)) {
+        require_once __DIR__ . '/comprovantes_lib.php';
+        date_default_timezone_set('America/Sao_Paulo');
+        $pdo = getDB();
+        ensure_schema($pdo);
+        comprovantes_processar($pdo, $json);
+    }
+} catch (Throwable $e) {
+    error_log('chatmix_webhook: ' . $e->getMessage());
+}
 wh_out(200, 'Recebido.');

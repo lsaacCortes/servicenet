@@ -42,3 +42,6 @@ define('CHATMIX_TEMPLATE', '');
 // no ChatMix:  https://SEU_DOMINIO/hotspot/admin/chatmix_webhook.php?s=SEGREDO
 // Gere um valor longo e aleatorio. Vazio = webhook desativado.
 define('CHATMIX_WEBHOOK_SECRET', '');
+// Opcional: token de acesso da Meta (WhatsApp Business) para baixar a imagem/PDF dos comprovantes.
+// Sem ele a pagina de comprovantes lista quem enviou e quando, mas nao mostra o arquivo.
+define('META_WHATSAPP_TOKEN', '');
