@@ -47,6 +47,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ->execute([$novo, $adminNome, $nota, $id]);
         admin_log($pdo, 'comprovante_' . $novo, $c['nome'] ?: $c['telefone'], 'comprovante #' . $id);
         $_SESSION['flash'] = ['success', $acao === 'baixar' ? 'Baixa registrada.' : 'Comprovante descartado.'];
+    } elseif ($acao === 'rebaixar') {
+        [$okb, $msgb] = comprovantes_rebaixar($pdo, $id);
+        $_SESSION['flash'] = [$okb ? 'success' : 'error', $msgb];
     } elseif ($acao === 'reabrir') {
         $pdo->prepare("UPDATE comprovantes SET status = 'pendente', baixado_por = NULL, baixado_em = NULL WHERE id = ?")->execute([$id]);
         admin_log($pdo, 'comprovante_reabrir', $c['nome'] ?: $c['telefone'], 'comprovante #' . $id);
@@ -222,7 +225,7 @@ function url_pagina(array $over): string
                             <?php else: ?><span><i class="fa-solid fa-file-pdf text-2xl"></i><br>PDF</span><?php endif; ?>
                         </a>
                     <?php else: ?>
-                        <div class="cp-thumb" title="Arquivo não baixado (token da Meta não configurado ou link expirado)"><span><i class="fa-solid fa-image-slash"></i><br>sem arquivo</span></div>
+                        <div class="cp-thumb" title="<?= $h($c['erro_midia'] ?: 'Arquivo não baixado') ?>"><span><i class="fa-solid fa-image-slash"></i><br>sem arquivo</span></div>
                     <?php endif; ?>
                 </div>
                 <div class="min-w-0">
@@ -232,6 +235,10 @@ function url_pagina(array $over): string
                             <i class="fa-brands fa-whatsapp"></i> <?= $h(comprovantes_fone_fmt($c['telefone'])) ?>
                         </a>
                     </p>
+                    <?php if (!$temArq): ?>
+                        <p class="cp-muted mt-1" style="color:#ff4c30;"><i class="fa-solid fa-triangle-exclamation"></i>
+                            <?= $h($c['erro_midia'] ?: 'Arquivo não baixado') ?></p>
+                    <?php endif; ?>
                     <?php if ($c['legenda']): ?><p class="cp-muted mt-1">“<?= $h($c['legenda']) ?>”</p><?php endif; ?>
                 </div>
                 <div>
@@ -244,6 +251,14 @@ function url_pagina(array $over): string
                 </div>
                 <div class="c-acoes flex flex-col gap-2">
                     <?php if ($souAdmin): ?>
+                        <?php if (!$temArq): ?>
+                            <form method="post">
+                                <input type="hidden" name="csrf" value="<?= $h($_SESSION['csrf']) ?>">
+                                <input type="hidden" name="id" value="<?= (int) $c['id'] ?>">
+                                <input type="hidden" name="acao" value="rebaixar">
+                                <button class="cp-act w-full"><i class="fa-solid fa-cloud-arrow-down"></i> Baixar arquivo</button>
+                            </form>
+                        <?php endif; ?>
                         <?php if ($c['status'] === 'pendente'): ?>
                             <form method="post" data-confirm="Confirma que a baixa de <?= $h($nome) ?> foi feita no sistema de clientes?"
                                   data-confirm-title="Dar baixa" data-confirm-text="Dar baixa" data-confirm-tone="primary">

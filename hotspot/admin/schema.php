@@ -143,6 +143,10 @@ function ensure_schema(PDO $pdo): void
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     ");
 
+    if (!$pdo->query("SHOW COLUMNS FROM comprovantes LIKE 'erro_midia'")->fetch()) {
+        $pdo->exec("ALTER TABLE comprovantes ADD COLUMN `erro_midia` VARCHAR(250) DEFAULT NULL AFTER `arquivo`");
+    }
+
     // Tabelas criadas antes do historico de acessos
     if (!$pdo->query("SHOW COLUMNS FROM hotspot_logins LIKE 'encerrado_em'")->fetch()) {
         $pdo->exec("ALTER TABLE hotspot_logins
