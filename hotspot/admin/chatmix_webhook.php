@@ -54,9 +54,13 @@ $secret = defined('CHATMIX_WEBHOOK_SECRET') ? (string) CHATMIX_WEBHOOK_SECRET : 
 if ($secret === '') {
     wh_out(503, 'Webhook desativado.');
 }
-// O ChatMix manda o segredo no header X-Webhook-Secret; tambem aceita ?s= na URL
-$enviado = (string) ($_SERVER['HTTP_X_WEBHOOK_SECRET'] ?? ($_GET['s'] ?? ''));
-if (!hash_equals($secret, $enviado)) {
+// O ChatMix manda no header X-Webhook-Secret uma assinatura do corpo (HMAC-SHA256 em hexadecimal,
+// diferente a cada envio). Tambem aceita o segredo puro no header ou em ?s= na URL.
+$enviado = trim((string) ($_SERVER['HTTP_X_WEBHOOK_SECRET'] ?? ($_GET['s'] ?? '')));
+$assinatura = strtolower(preg_replace('/^sha256=/i', '', $enviado));
+$autorizado = hash_equals($secret, $enviado)
+    || hash_equals(hash_hmac('sha256', $corpo, $secret), $assinatura);
+if (!$autorizado) {
     wh_gravar('recusado: segredo errado', $corpo);
     wh_out(403, 'Acesso negado.');
 }
