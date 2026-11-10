@@ -92,16 +92,27 @@ if (function_exists('fastcgi_finish_request')) {
     flush();
 }
 
-// Extrai os comprovantes (imagem/PDF). Falha aqui nao pode fazer o ChatMix reenviar o evento.
-try {
-    $json = json_decode($corpo, true);
-    if (is_array($json)) {
-        require_once __DIR__ . '/comprovantes_lib.php';
-        date_default_timezone_set('America/Sao_Paulo');
+// Roteia o que chegou: comprovantes (imagem/PDF) e demais mensagens (pos-venda ou caixa "outras").
+// Falha aqui nao pode fazer o ChatMix reenviar o evento; cada etapa tem seu proprio try.
+$json = json_decode($corpo, true);
+if (is_array($json)) {
+    require_once __DIR__ . '/comprovantes_lib.php';
+    require_once __DIR__ . '/mensagens_lib.php';
+    date_default_timezone_set('America/Sao_Paulo');
+    try {
         $pdo = getDB();
         ensure_schema($pdo);
-        comprovantes_processar($pdo, $json);
+        try {
+            comprovantes_processar($pdo, $json);
+        } catch (Throwable $e) {
+            error_log('chatmix_webhook comprovantes: ' . $e->getMessage());
+        }
+        try {
+            mensagens_processar($pdo, $json);
+        } catch (Throwable $e) {
+            error_log('chatmix_webhook mensagens: ' . $e->getMessage());
+        }
+    } catch (Throwable $e) {
+        error_log('chatmix_webhook: ' . $e->getMessage());
     }
-} catch (Throwable $e) {
-    error_log('chatmix_webhook: ' . $e->getMessage());
 }

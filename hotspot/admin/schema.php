@@ -162,6 +162,44 @@ function ensure_schema(PDO $pdo): void
         $pdo->exec("ALTER TABLE comprovantes MODIFY `cliente_erro` TEXT DEFAULT NULL");
     }
 
+    // Disparos de pos-venda feitos por nos: so quem esta aqui tem a resposta roteada para o pos-venda
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS `posvenda_envios` (
+            `id`          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            `id_posvenda` INT UNSIGNED NOT NULL,
+            `fone_chave`  VARCHAR(12) NOT NULL,
+            `enviado_por` VARCHAR(100) DEFAULT NULL,
+            `enviado_em`  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            KEY `idx_chave` (`fone_chave`, `enviado_em`),
+            KEY `idx_posvenda` (`id_posvenda`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    ");
+
+    // Mensagens (texto, audio, botoes...) recebidas no canal de disparos, ja roteadas
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS `chatmix_mensagens` (
+            `id`           INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            `wamid`        VARCHAR(150) NOT NULL,
+            `telefone`     VARCHAR(20)  NOT NULL,
+            `fone_chave`   VARCHAR(12)  NOT NULL,
+            `nome_perfil`  VARCHAR(150) DEFAULT NULL,
+            `tipo`         VARCHAR(20)  NOT NULL,
+            `texto`        VARCHAR(1000) DEFAULT NULL,
+            `destino`      ENUM('posvenda','outras') NOT NULL,
+            `id_posvenda`  INT UNSIGNED DEFAULT NULL,
+            `etiqueta`     VARCHAR(20)  DEFAULT NULL,
+            `cliente_nome` VARCHAR(150) DEFAULT NULL,
+            `status`       ENUM('novo','tratado') NOT NULL DEFAULT 'novo',
+            `tratado_por`  VARCHAR(100) DEFAULT NULL,
+            `tratado_em`   DATETIME DEFAULT NULL,
+            `recebido_em`  DATETIME NOT NULL,
+            `created_at`   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY `uk_wamid` (`wamid`),
+            KEY `idx_destino` (`destino`, `status`, `recebido_em`),
+            KEY `idx_posvenda` (`id_posvenda`, `status`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    ");
+
     // Tabelas criadas antes do historico de acessos
     if (!$pdo->query("SHOW COLUMNS FROM hotspot_logins LIKE 'encerrado_em'")->fetch()) {
         $pdo->exec("ALTER TABLE hotspot_logins

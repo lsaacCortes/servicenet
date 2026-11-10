@@ -3,6 +3,7 @@ require_once 'session.php';
 require_once 'db.php';
 require_once 'schema.php';
 require_once 'posvenda_lib.php';
+require_once 'mensagens_lib.php';
 
 admin_require_login(true);
 header('Content-Type: application/json; charset=utf-8');
@@ -30,10 +31,13 @@ if ($ehPost) {
 // Expressoes reutilizadas nas consultas
 const PV_DIAS    = 'DATEDIFF(CURDATE(), DATE(ativado_em))';
 const PV_ABERTO  = "status <> 'concluido'";
+// Cliente respondeu ao disparo e ninguem tratou a mensagem ainda
+const PV_RESPONDEU = "(status <> 'concluido' AND EXISTS (SELECT 1 FROM chatmix_mensagens m WHERE m.id_posvenda = posvenda.id AND m.status = 'novo'))";
 
 function pv_filtro_sql(string $filtro): string
 {
     switch ($filtro) {
+        case 'respondeu':    return PV_RESPONDEU;
         case 'prioridade':   return PV_ABERTO . ' AND ' . PV_DIAS . ' >= ' . POSVENDA_DIAS_ALVO;
         case 'aguardando':   return "status = 'pendente' AND " . PV_DIAS . ' < ' . POSVENDA_DIAS_ALVO;
         case 'em_contato':   return "status = 'em_contato'";
@@ -62,6 +66,9 @@ function pv_linha(array $r): array
         'ultimo_contato_em'  => $r['ultimo_contato_em'],
         'ultimo_contato_por' => $r['ultimo_contato_por'],
         'concluido_em'    => $r['concluido_em'],
+        'respondeu'       => !empty($r['msg_nova']),
+        'ultima_msg'      => $r['ultima_msg'] ?? null,
+        'ultima_msg_em'   => $r['ultima_msg_em'] ?? null,
     ];
 }
 
@@ -96,16 +103,20 @@ switch ($action) {
         // Prioridades primeiro (as mais atrasadas no topo); depois os mais recentes. Concluidos: ultimos concluidos.
         $ordem = $filtro === 'concluidos'
             ? 'concluido_em DESC'
-            : '(status <> \'concluido\' AND ' . PV_DIAS . ' >= ' . POSVENDA_DIAS_ALVO . ') DESC,
+            : 'msg_nova DESC, (status <> \'concluido\' AND ' . PV_DIAS . ' >= ' . POSVENDA_DIAS_ALVO . ') DESC,
                CASE WHEN ' . PV_DIAS . ' >= ' . POSVENDA_DIAS_ALVO . ' THEN ativado_em END ASC,
                ativado_em DESC';
 
-        $stmt = $pdo->prepare("SELECT *, " . PV_DIAS . " AS dias FROM posvenda WHERE $where ORDER BY $ordem LIMIT $por OFFSET $offset");
+        $stmt = $pdo->prepare("SELECT *, " . PV_DIAS . " AS dias, " . PV_RESPONDEU . " AS msg_nova,
+                (SELECT m.texto FROM chatmix_mensagens m WHERE m.id_posvenda = posvenda.id ORDER BY m.recebido_em DESC, m.id DESC LIMIT 1) AS ultima_msg,
+                (SELECT m.recebido_em FROM chatmix_mensagens m WHERE m.id_posvenda = posvenda.id ORDER BY m.recebido_em DESC, m.id DESC LIMIT 1) AS ultima_msg_em
+            FROM posvenda WHERE $where ORDER BY $ordem LIMIT $por OFFSET $offset");
         $stmt->execute($params);
         $linhas = array_map('pv_linha', $stmt->fetchAll());
 
         $c = $pdo->query("SELECT
                 SUM(status <> 'concluido') AS abertos,
+                SUM(" . PV_RESPONDEU . ") AS respondeu,
                 SUM(status <> 'concluido' AND " . PV_DIAS . " >= " . POSVENDA_DIAS_ALVO . ") AS prioridade,
                 SUM(status = 'pendente' AND " . PV_DIAS . " < " . POSVENDA_DIAS_ALVO . ") AS aguardando,
                 SUM(status = 'em_contato') AS em_contato,
@@ -167,6 +178,13 @@ switch ($action) {
             WHERE id = ?")
             ->execute([$status, $status, $resultado, $anotacoes ?: null, (int) $contatou, (int) $contatou, $adminNome, $id]);
 
+        // Registrar o atendimento (fora "pendente") trata as respostas do cliente que estavam novas
+        if ($contatou) {
+            $pdo->prepare("UPDATE chatmix_mensagens SET status = 'tratado', tratado_por = ?, tratado_em = NOW()
+                           WHERE id_posvenda = ? AND status = 'novo'")
+                ->execute([$adminNome, $id]);
+        }
+
         admin_log($pdo, 'posvenda_atualizar', $atual['nome'], $atual['status'] . ' -> ' . $status . ($resultado ? " ($resultado)" : ''));
         out(['success' => true, 'message' => $status === 'concluido' ? 'Atendimento concluído.' : 'Atendimento atualizado.']);
     }
@@ -209,6 +227,8 @@ switch ($action) {
         $pdo->prepare("UPDATE posvenda SET status = IF(status = 'pendente', 'em_contato', status),
                        ultimo_contato_em = NOW(), ultimo_contato_por = ? WHERE id = ?")
             ->execute([$adminNome, $id]);
+        // A partir daqui, respostas desse numero (por alguns dias) vao para o pos-venda
+        mensagens_registrar_envio($pdo, $id, (string) $r['telefone'], $adminNome);
         admin_log($pdo, 'posvenda_envio', $r['nome'], 'mensagem enviada via ChatMix');
         out(['success' => true, 'message' => 'Mensagem enviada para ' . explode(' ', trim($r['nome']))[0] . '.']);
     }

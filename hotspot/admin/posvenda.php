@@ -33,6 +33,11 @@ $adminNome = $_SESSION['admin_nome'] ?? 'Admin';
         .tab-btn .cnt { margin-left: 6px; padding: 1px 7px; border-radius: 999px; font-size: 11px; background: var(--w12); }
         .tab-btn.active .cnt { background: var(--w25); }
         .tab-btn.tab-prio .cnt { background: rgba(255,76,48,0.35); color: var(--text); }
+        .tab-btn.tab-resp .cnt { background: rgba(96,165,250,0.35); color: var(--text); }
+        .tag-resp { display: inline-flex; align-items: center; gap: 5px; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 700;
+            background: rgba(96,165,250,0.25); color: #bfdbfe; border: 1px solid rgba(96,165,250,0.5); }
+        .pv-msg { margin-top: 4px; font-size: 12px; color: var(--w70); border-left: 3px solid rgba(96,165,250,0.6); padding-left: 8px;
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: break-word; }
         .search-input { background: var(--w08); border: 1px solid var(--w15); color: var(--text); }
         .search-input::placeholder { color: var(--w35); }
         .search-input:focus { outline: none; border-color: #ff4c30; }
@@ -106,6 +111,7 @@ $adminNome = $_SESSION['admin_nome'] ?? 'Admin';
             <a href="leads.php" class="nav-item"><i class="fa-solid fa-users w-5 text-center"></i><span>Leads</span></a>
             <a href="posvenda.php" class="nav-item active"><i class="fa-solid fa-headset w-5 text-center"></i><span>Pós-venda</span></a>
             <a href="comprovantes.php" class="nav-item"><i class="fa-solid fa-file-invoice-dollar w-5 text-center"></i><span>Comprovantes</span></a>
+            <a href="mensagens.php" class="nav-item"><i class="fa-solid fa-inbox w-5 text-center"></i><span>Mensagens</span></a>
             <a href="conectados.php" class="nav-item"><i class="fa-solid fa-wifi w-5 text-center"></i><span>Conectados</span></a>
             <a href="historico.php" class="nav-item"><i class="fa-solid fa-clock-rotate-left w-5 text-center"></i><span>Histórico</span></a>
             <a href="alertas.php" class="nav-item"><i class="fa-solid fa-bell w-5 text-center"></i><span>Alertas</span></a>
@@ -155,6 +161,7 @@ $adminNome = $_SESSION['admin_nome'] ?? 'Admin';
         <!-- Filtros -->
         <div id="tabs" class="flex flex-wrap gap-2 mt-4" role="tablist">
             <button class="tab-btn active px-4 py-2 rounded-xl text-sm font-semibold" data-f="abertos">Em aberto<span class="cnt" data-c="abertos">0</span></button>
+            <button class="tab-btn tab-resp px-4 py-2 rounded-xl text-sm font-semibold" data-f="respondeu"><i class="fa-solid fa-comment-dots text-xs"></i> Respondeu<span class="cnt" data-c="respondeu">0</span></button>
             <button class="tab-btn tab-prio px-4 py-2 rounded-xl text-sm font-semibold" data-f="prioridade"><i class="fa-solid fa-flag text-xs"></i> Prioridade<span class="cnt" data-c="prioridade">0</span></button>
             <button class="tab-btn px-4 py-2 rounded-xl text-sm font-semibold" data-f="aguardando">Aguardando<span class="cnt" data-c="aguardando">0</span></button>
             <button class="tab-btn px-4 py-2 rounded-xl text-sm font-semibold" data-f="em_contato">Em contato<span class="cnt" data-c="em_contato">0</span></button>
@@ -253,7 +260,7 @@ $adminNome = $_SESSION['admin_nome'] ?? 'Admin';
     const $ = id => document.getElementById(id);
     const RESULTADOS = { satisfeito: 'Cliente satisfeito', problema_resolvido: 'Problema resolvido', precisa_visita: 'Precisa de visita', outro: 'Outro' };
     const VAZIOS = {
-        abertos: 'Nenhum atendimento em aberto.', prioridade: 'Nenhum cliente prioritário no momento.',
+        abertos: 'Nenhum atendimento em aberto.', respondeu: 'Nenhuma resposta nova dos clientes.', prioridade: 'Nenhum cliente prioritário no momento.',
         aguardando: 'Nenhum cliente aguardando os 7 dias.', em_contato: 'Ninguém em contato agora.',
         sem_resposta: 'Nenhum cliente sem resposta.', concluidos: 'Nenhum atendimento concluído ainda.'
     };
@@ -273,6 +280,7 @@ $adminNome = $_SESSION['admin_nome'] ?? 'Admin';
         return dd + '/' + m + '/' + y + (comHora && h ? ' ' + h.slice(0, 5) : '');
     }
     function rotulo(r) {
+        if (r.respondeu) return ['aguardando', 'Respondeu'];
         if (r.status === 'pendente') return r.dias < DIAS_ALVO ? ['aguardando', 'Aguardando'] : ['pendente', 'Pendente'];
         return [r.status, { em_contato: 'Em contato', sem_resposta: 'Sem resposta', concluido: 'Concluído' }[r.status]];
     }
@@ -334,8 +342,14 @@ $adminNome = $_SESSION['admin_nome'] ?? 'Admin';
         const linhaNome = el('div', 'flex items-center gap-2 flex-wrap');
         linhaNome.append(el('span', 'text-white font-bold text-sm truncate', r.nome));
         if (r.prioridade) { const t = el('span', 'tag-prio'); t.append(el('i', 'fa-solid fa-flag'), document.createTextNode('Prioridade')); linhaNome.append(t); }
+        if (r.respondeu) { const t = el('span', 'tag-resp'); t.append(el('i', 'fa-solid fa-comment-dots'), document.createTextNode('Respondeu')); linhaNome.append(t); }
         if (r.status_contrato && r.status_contrato.toLowerCase() !== 'ativo') linhaNome.append(el('span', 'badge badge-sem_resposta', 'Contrato ' + r.status_contrato.toLowerCase()));
         nm.append(linhaNome, el('p', 'pv-muted truncate', [r.bairro, r.cidade].filter(Boolean).join(' · ') || 'Endereço não informado'));
+        if (r.ultima_msg) {
+            const pm = el('p', 'pv-msg', '“' + r.ultima_msg + '”');
+            pm.title = 'Resposta do cliente em ' + dataBR(r.ultima_msg_em, true);
+            nm.append(pm);
+        }
         c1.append(nm);
 
         const c2 = el('div', 'c-contato min-w-0');
