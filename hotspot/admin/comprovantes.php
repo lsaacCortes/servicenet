@@ -21,10 +21,23 @@ if (!in_array($filtro, ['pendente', 'baixado', 'descartado'], true)) {
     $filtro = 'pendente';
 }
 $q = trim($_GET['q'] ?? '');
+// Periodo (AAAA-MM-DD) e administrador que deu a baixa; valores invalidos sao ignorados
+$dataOk = function ($v) {
+    $d = DateTime::createFromFormat('Y-m-d', (string) $v);
+    return $d && $d->format('Y-m-d') === $v ? $v : '';
+};
+$d1  = $dataOk($_GET['d1'] ?? '');
+$d2  = $dataOk($_GET['d2'] ?? '');
+if ($d1 !== '' && $d2 !== '' && $d1 > $d2) {
+    [$d1, $d2] = [$d2, $d1];
+}
+$adm = trim($_GET['adm'] ?? '');
+$pendentes = $filtro === 'pendente'; // pendente nao tem quem deu baixa; o periodo vale para o recebimento
 
 // ---- Acoes (formulario POST + redirecionamento) ----
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $volta = 'comprovantes.php?f=' . urlencode($filtro) . ($q !== '' ? '&q=' . urlencode($q) : '');
+    $volta = 'comprovantes.php?' . http_build_query(array_filter(
+        ['f' => $filtro, 'q' => $q, 'd1' => $d1, 'd2' => $d2, 'adm' => $adm], fn($v) => $v !== ''));
     if (empty($_SESSION['csrf']) || !hash_equals($_SESSION['csrf'], (string) ($_POST['csrf'] ?? ''))) {
         $_SESSION['flash'] = ['error', 'Sessão inválida. Tente novamente.'];
         header('Location: ' . $volta); exit;
@@ -72,6 +85,23 @@ if ($q !== '') {
     $params[] = '%' . $q . '%';
     if ($dig !== '') $params[] = '%' . $dig . '%';
 }
+$colData = $pendentes ? 'recebido_em' : 'baixado_em';
+if ($d1 !== '') {
+    $where .= " AND $colData >= ?";
+    $params[] = $d1 . ' 00:00:00';
+}
+if ($d2 !== '') {
+    $where .= " AND $colData <= ?";
+    $params[] = $d2 . ' 23:59:59';
+}
+if ($adm !== '' && !$pendentes) {
+    $where .= ' AND baixado_por = ?';
+    $params[] = $adm;
+}
+$admins = $pdo->query("SELECT DISTINCT baixado_por FROM comprovantes WHERE baixado_por IS NOT NULL AND baixado_por <> '' ORDER BY baixado_por")
+              ->fetchAll(PDO::FETCH_COLUMN);
+$filtrando = $q !== '' || $d1 !== '' || $d2 !== '' || ($adm !== '' && !$pendentes);
+
 $por  = 12;
 $page = max(1, (int) ($_GET['page'] ?? 1));
 $st = $pdo->prepare("SELECT COUNT(*) FROM comprovantes WHERE $where");
@@ -98,8 +128,8 @@ function tempo_atras(string $dt): string
 }
 function url_pagina(array $over): string
 {
-    global $filtro, $q, $page;
-    $a = array_merge(['f' => $filtro, 'q' => $q, 'page' => $page], $over);
+    global $filtro, $q, $page, $d1, $d2, $adm;
+    $a = array_merge(['f' => $filtro, 'q' => $q, 'd1' => $d1, 'd2' => $d2, 'adm' => $adm, 'page' => $page], $over);
     return 'comprovantes.php?' . http_build_query(array_filter($a, fn($v) => $v !== '' && $v !== null));
 }
 ?>
@@ -198,7 +228,31 @@ function url_pagina(array $over): string
                 <input name="q" value="<?= $h($q) ?>" type="search" placeholder="Buscar por nome ou telefone..." autocomplete="off"
                        class="search-input w-full pl-9 pr-4 py-2.5 rounded-xl text-sm">
             </div>
-            <button class="cp-act">Buscar</button>
+            <div>
+                <label class="cp-muted block mb-1" for="d1"><?= $pendentes ? 'Enviado de' : 'Baixa de' ?></label>
+                <input id="d1" name="d1" type="date" value="<?= $h($d1) ?>" class="search-input py-2 px-3 rounded-xl text-sm">
+            </div>
+            <div>
+                <label class="cp-muted block mb-1" for="d2">até</label>
+                <input id="d2" name="d2" type="date" value="<?= $h($d2) ?>" class="search-input py-2 px-3 rounded-xl text-sm">
+            </div>
+            <?php if (!$pendentes): ?>
+            <div>
+                <label class="cp-muted block mb-1" for="adm">Baixa por</label>
+                <select id="adm" name="adm" class="search-input py-2 px-3 rounded-xl text-sm">
+                    <option value="">Todos</option>
+                    <?php foreach ($admins as $a): ?>
+                        <option value="<?= $h($a) ?>" <?= $adm === $a ? 'selected' : '' ?>><?= $h($a) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <?php endif; ?>
+            <div class="flex gap-2 self-end">
+                <button class="cp-act">Filtrar</button>
+                <?php if ($filtrando): ?>
+                    <a href="comprovantes.php?f=<?= $h(urlencode($filtro)) ?>" class="cp-act" title="Limpar filtros"><i class="fa-solid fa-xmark"></i> Limpar</a>
+                <?php endif; ?>
+            </div>
         </form>
 
         <div class="flex flex-wrap gap-2 mt-4">
@@ -212,7 +266,7 @@ function url_pagina(array $over): string
         <div class="flex flex-col gap-3 mt-5">
             <?php if (!$linhas): ?>
                 <div class="glass-card rounded-2xl p-8 text-center text-white opacity-70">
-                    <?= $filtro === 'pendente' ? 'Nenhum comprovante pendente. 🎉' : 'Nada por aqui.' ?>
+                    <?= $filtro === 'pendente' && !$filtrando ? 'Nenhum comprovante pendente. 🎉' : 'Nada por aqui.' ?>
                 </div>
             <?php endif; ?>
             <?php foreach ($linhas as $c):
