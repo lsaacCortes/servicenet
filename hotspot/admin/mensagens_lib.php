@@ -3,7 +3,7 @@
 // Roteamento das mensagens recebidas no canal de disparos do ChatMix
 //  - imagem/PDF: tratados por comprovantes_lib.php
 //  - resposta de quem recebeu o pos-venda nos ultimos dias: pos-venda
-//  - o resto: caixa "Outras mensagens", com etiqueta por palavras-chave
+//  - o resto: descartado (nao ha mais caixa de "Outras mensagens")
 // =============================================================
 
 const MENSAGENS_DIAS_POSVENDA = 7; // ate quantos dias apos o disparo uma resposta conta como resposta ao pos-venda
@@ -56,31 +56,6 @@ function mensagens_texto(array $m): ?string
     }
 }
 
-// Etiqueta de triagem por palavras-chave (so ajuda visual: na duvida, 'outros')
-function mensagens_etiqueta(string $texto): string
-{
-    $t = ' ' . comprovantes_norm($texto) . ' ';
-    $tem = function (array $palavras) use ($t): bool {
-        foreach ($palavras as $p) {
-            if (strpos($t, $p) !== false) return true;
-        }
-        return false;
-    };
-    if ($tem([' sem internet', ' sem sinal', ' caiu ', ' lenta', ' lento', ' nao funciona', ' nao conecta', ' nao esta funcionando', ' travando', ' sem conexao', ' suporte', ' tecnico'])) {
-        return 'suporte';
-    }
-    if ($tem([' ja paguei', ' paguei', ' ja foi pago', ' ja foi paga', ' pagamento feito', ' pago ontem', ' pix feito', ' fiz o pix', ' fiz pix', ' comprovante'])) {
-        return 'ja_pagou';
-    }
-    if ($tem([' vou pagar', ' vou paga', ' ja vou pagar', ' pago hoje', ' pago amanha', ' pago sexta', ' pago segunda', ' pago ate', ' pagarei', ' pagar hoje', ' pagar amanha', ' pagar ate', ' to pagando', ' vou fazer o pix'])) {
-        return 'vai_pagar';
-    }
-    if ($tem([' ok ', ' obrigado', ' obrigada', ' valeu', ' blz ', ' beleza', ' certo ', ' tudo bem', ' tudo certo', ' tudo otimo', ' otimo', ' show ', ' bom dia', ' boa tarde', ' boa noite'])) {
-        return 'cordial';
-    }
-    return 'outros';
-}
-
 // Extrai as mensagens que NAO sao comprovante (imagem/PDF so vira mensagem se o tipo nao for aceito la)
 function mensagens_extrair(array $p): array
 {
@@ -122,29 +97,7 @@ function mensagens_extrair(array $p): array
     return $achados;
 }
 
-// Nome do cliente no SGP pelo telefone ('' se nao achar; 'Vários clientes' se ambiguo)
-function mensagens_cliente_sgp(string $telefone): string
-{
-    foreach (comprovantes_fone_variantes($telefone) as $var) {
-        $res = comprovantes_sgp_por_telefone($var);
-        if (!$res['ok']) {
-            return '';
-        }
-        $n = count($res['clientes']);
-        if ($n > COMPROVANTE_SGP_MAX_CLIENTES) {
-            return '';
-        }
-        if ($n === 1) {
-            return mb_substr((string) $res['clientes'][0]['nome'], 0, 150);
-        }
-        if ($n > 1) {
-            return 'Vários clientes';
-        }
-    }
-    return '';
-}
-
-// Roteia e grava as mensagens de um payload. Devolve quantas novas foram gravadas.
+// Grava as respostas ao pos-venda de um payload. Devolve quantas novas foram gravadas.
 function mensagens_processar(PDO $pdo, array $payload): int
 {
     $novas = 0;
@@ -165,23 +118,17 @@ function mensagens_processar(PDO $pdo, array $payload): int
         $st->execute([$chave]);
         $idPv = $st->fetchColumn();
 
-        $destino = $idPv !== false ? 'posvenda' : 'outras';
-        $cliente = '';
-        if ($destino === 'outras') {
-            try {
-                $cliente = mensagens_cliente_sgp($m['telefone']);
-            } catch (Throwable $e) {
-                // identificacao e opcional
-            }
+        // So interessa a resposta ao pos-venda; o resto nao e guardado
+        if ($idPv === false) {
+            continue;
         }
 
         $pdo->prepare("INSERT IGNORE INTO chatmix_mensagens
-            (wamid, telefone, fone_chave, nome_perfil, tipo, texto, destino, id_posvenda, etiqueta, cliente_nome, recebido_em)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+            (wamid, telefone, fone_chave, nome_perfil, tipo, texto, destino, id_posvenda, recebido_em)
+            VALUES (?, ?, ?, ?, ?, ?, 'posvenda', ?, ?)")
             ->execute([
                 $m['wamid'], $m['telefone'], $chave, mb_substr($m['nome_perfil'], 0, 150) ?: null, mb_substr($m['tipo'], 0, 20),
-                $m['texto'] !== '' ? $m['texto'] : null, $destino, $idPv !== false ? (int) $idPv : null,
-                mensagens_etiqueta($m['texto']), $cliente !== '' ? $cliente : null, $m['recebido_em'],
+                $m['texto'] !== '' ? $m['texto'] : null, (int) $idPv, $m['recebido_em'],
             ]);
         $novas++;
     }

@@ -92,7 +92,7 @@ if (function_exists('fastcgi_finish_request')) {
     flush();
 }
 
-// Roteia o que chegou: comprovantes (imagem/PDF) e demais mensagens (pos-venda ou caixa "outras").
+// Roteia o que chegou: comprovantes (imagem/PDF) e respostas ao pos-venda.
 // Falha aqui nao pode fazer o ChatMix reenviar o evento; cada etapa tem seu proprio try.
 $json = json_decode($corpo, true);
 if (is_array($json)) {
