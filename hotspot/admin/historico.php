@@ -139,7 +139,7 @@ $qs = http_build_query(['q' => $q, 'de' => $de, 'ate' => $ate]);
             <a href="leads.php" class="nav-item"><i class="fa-solid fa-users w-5 text-center"></i><span>Leads</span></a>
             <a href="posvenda.php" class="nav-item"><i class="fa-solid fa-headset w-5 text-center"></i><span>Pós-venda</span></a>
             <a href="comprovantes.php" class="nav-item"><i class="fa-solid fa-file-invoice-dollar w-5 text-center"></i><span>Comprovantes</span></a>
-            <a href="mensagens.php" class="nav-item"><i class="fa-solid fa-inbox w-5 text-center"></i><span>Mensagens</span></a>
+            <a href="planos_sgp.php" class="nav-item"><i class="fa-solid fa-table-list w-5 text-center"></i><span>Clientes por plano</span></a>
             <a href="conectados.php" class="nav-item"><i class="fa-solid fa-wifi w-5 text-center"></i><span>Conectados</span></a>
             <a href="historico.php" class="nav-item active"><i class="fa-solid fa-clock-rotate-left w-5 text-center"></i><span>Histórico</span></a>
             <a href="alertas.php" class="nav-item"><i class="fa-solid fa-bell w-5 text-center"></i><span>Alertas</span></a>
