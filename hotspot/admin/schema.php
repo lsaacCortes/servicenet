@@ -200,6 +200,40 @@ function ensure_schema(PDO $pdo): void
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     ");
 
+    // Campanha de aniversario (upgrade 50 -> 300 Mega, 3 meses pelo preco do 50)
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS `upgrade_clientes` (
+            `id`            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            `contrato`      INT UNSIGNED DEFAULT NULL,
+            `nome`          VARCHAR(150) NOT NULL,
+            `telefones`     VARCHAR(255) DEFAULT NULL,
+            `fones_chave`   VARCHAR(255) NOT NULL DEFAULT ',',
+            `plano_atual`   VARCHAR(100) DEFAULT NULL,
+            `origem`        ENUM('base','novo','resposta') NOT NULL DEFAULT 'base',
+            `status`        ENUM('alvo','quero','nao_quero','confirmado','em_promocao','efetivado','desistiu') NOT NULL DEFAULT 'alvo',
+            `respondeu_em`  DATETIME DEFAULT NULL,
+            `promo_inicio`  DATE DEFAULT NULL,
+            `aviso_em`      DATETIME DEFAULT NULL,
+            `obs`           VARCHAR(500) DEFAULT NULL,
+            `atualizado_por` VARCHAR(100) DEFAULT NULL,
+            `created_at`    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            `updated_at`    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            UNIQUE KEY `uk_contrato` (`contrato`),
+            KEY `idx_status` (`status`, `respondeu_em`),
+            KEY `idx_promo` (`status`, `promo_inicio`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    ");
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS `upgrade_historico` (
+            `id`         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            `id_cliente` INT UNSIGNED NOT NULL,
+            `evento`     VARCHAR(255) NOT NULL,
+            `por`        VARCHAR(100) DEFAULT NULL,
+            `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            KEY `idx_cliente` (`id_cliente`, `created_at`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    ");
+
     // Tabelas criadas antes do historico de acessos
     if (!$pdo->query("SHOW COLUMNS FROM hotspot_logins LIKE 'encerrado_em'")->fetch()) {
         $pdo->exec("ALTER TABLE hotspot_logins

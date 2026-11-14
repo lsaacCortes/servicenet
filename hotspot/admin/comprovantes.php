@@ -187,6 +187,7 @@ function url_pagina(array $over): string
             <a href="leads.php" class="nav-item"><i class="fa-solid fa-users w-5 text-center"></i><span>Leads</span></a>
             <a href="posvenda.php" class="nav-item"><i class="fa-solid fa-headset w-5 text-center"></i><span>Pós-venda</span></a>
             <a href="comprovantes.php" class="nav-item active"><i class="fa-solid fa-file-invoice-dollar w-5 text-center"></i><span>Comprovantes</span></a>
+            <a href="campanha_upgrade.php" class="nav-item"><i class="fa-solid fa-cake-candles w-5 text-center"></i><span>Campanha upgrade</span></a>
             <a href="planos_sgp.php" class="nav-item"><i class="fa-solid fa-table-list w-5 text-center"></i><span>Clientes por plano</span></a>
             <a href="conectados.php" class="nav-item"><i class="fa-solid fa-wifi w-5 text-center"></i><span>Conectados</span></a>
             <a href="historico.php" class="nav-item"><i class="fa-solid fa-clock-rotate-left w-5 text-center"></i><span>Histórico</span></a>

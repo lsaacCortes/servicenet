@@ -108,6 +108,12 @@ if (is_array($json)) {
             error_log('chatmix_webhook comprovantes: ' . $e->getMessage());
         }
         try {
+            require_once __DIR__ . '/upgrade_lib.php';
+            upgrade_processar($pdo, $json);
+        } catch (Throwable $e) {
+            error_log('chatmix_webhook upgrade: ' . $e->getMessage());
+        }
+        try {
             mensagens_processar($pdo, $json);
         } catch (Throwable $e) {
             error_log('chatmix_webhook mensagens: ' . $e->getMessage());

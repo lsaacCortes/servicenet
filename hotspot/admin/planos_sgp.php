@@ -173,6 +173,115 @@ if ($ehApi) {
         planos_out(['success' => true, 'linhas' => $linhas, 'falhas' => $falhas]);
     }
 
+    // Consumo dos ultimos N dias (extratouso do SGP). O SGP devolve uma linha por sessao PPPoE, em bytes,
+    // com o contador acumulado desde o inicio da sessao (nao zera na virada do mes) e a sessao so aparece
+    // no mes em que comecou. Por isso cada sessao e rateada pelo tempo que cai dentro da janela
+    // (supoe uso constante dentro da sessao) e sao consultados os meses da janela e o anterior.
+    if ($action === 'consumo' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $entrada = json_decode((string) file_get_contents('php://input'), true);
+        if (!is_array($entrada) || !hash_equals($_SESSION['csrf'], (string) ($entrada['csrf'] ?? ''))) {
+            planos_out(['success' => false, 'message' => 'Sessão inválida. Recarregue a página.'], 403);
+        }
+        if (!defined('SGP_BASE_URL') || !defined('SGP_TOKEN') || SGP_TOKEN === '') {
+            planos_out(['success' => false, 'message' => 'SGP não configurado no config.php.'], 500);
+        }
+        date_default_timezone_set('America/Sao_Paulo');
+        $dias = (int) ($entrada['dias'] ?? 30);
+        if ($dias < 1 || $dias > 90) {
+            planos_out(['success' => false, 'message' => 'Período inválido (1 a 90 dias).'], 400);
+        }
+        $fim    = time();
+        $inicio = $fim - $dias * 86400;
+        // Meses a consultar: do mes anterior ao inicio da janela ate o mes atual
+        $meses = [];
+        $m = new DateTimeImmutable(date('Y-m-01', $inicio));
+        $m = $m->modify('-1 month');
+        $ultimo = date('Y-m', $fim);
+        while ($m->format('Y-m') <= $ultimo) {
+            $meses[] = [(int) $m->format('n'), (int) $m->format('Y')];
+            $m = $m->modify('+1 month');
+        }
+        $contratos = array_slice(array_values(array_unique(array_filter(array_map('intval', (array) ($entrada['contratos'] ?? []))))), 0, 30);
+
+        $pendentes = [];
+        foreach ($contratos as $ct) {
+            foreach ($meses as [$mes, $ano]) {
+                $pendentes[] = [$ct, $mes, $ano];
+            }
+        }
+        $mh = curl_multi_init();
+        $ativos = [];
+        $res = [];
+        $falhas = [];
+        foreach ($contratos as $ct) {
+            $res[$ct] = ['download' => 0.0, 'upload' => 0.0, 'sessoes' => 0];
+        }
+        $abrir = function () use (&$pendentes, &$ativos, $mh) {
+            while ($pendentes && count($ativos) < PLANOS_PARALELO) {
+                [$ct, $mes, $ano] = array_shift($pendentes);
+                $ch = curl_init(rtrim(SGP_BASE_URL, '/') . '/api/ura/extratouso/');
+                curl_setopt_array($ch, [
+                    CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_CONNECTTIMEOUT => 8,
+                    CURLOPT_TIMEOUT        => 40,
+                    CURLOPT_POST           => true,
+                    CURLOPT_POSTFIELDS     => ['app' => defined('SGP_APP') ? SGP_APP : 'SGP', 'token' => SGP_TOKEN, 'contrato' => $ct, 'mes' => $mes, 'ano' => $ano],
+                ]);
+                curl_multi_add_handle($mh, $ch);
+                $ativos[(int) $ch] = [$ct, $ch];
+            }
+        };
+        $abrir();
+        while ($ativos) {
+            curl_multi_exec($mh, $rodando);
+            while ($info = curl_multi_info_read($mh)) {
+                $ch = $info['handle'];
+                [$ct] = $ativos[(int) $ch];
+                $resp = curl_multi_getcontent($ch);
+                $http = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                $d = ($info['result'] === CURLE_OK && $http === 200) ? json_decode((string) $resp, true) : null;
+                if (!is_array($d)) {
+                    $falhas[$ct] = true;
+                } elseif (isset($d['list']) && is_array($d['list'])) { // sem sessoes no mes: {"total":0,"list":0}
+                    foreach ($d['list'] as $s) {
+                        $ini = strtotime((string) ($s['dataini'] ?? ''));
+                        if (!$ini) {
+                            continue;
+                        }
+                        $fimS = !empty($s['datafim']) ? strtotime((string) $s['datafim']) : $fim; // sessao aberta: ate agora
+                        if (!$fimS || $fimS < $ini) {
+                            $fimS = $ini;
+                        }
+                        $dur = max(1, $fimS - $ini);
+                        $sobra = min($fimS, $fim) - max($ini, $inicio); // segundos da sessao dentro da janela
+                        if ($fimS === $ini) {
+                            $frac = ($ini >= $inicio && $ini <= $fim) ? 1.0 : 0.0;
+                        } else {
+                            $frac = $sobra > 0 ? min(1.0, $sobra / $dur) : 0.0;
+                        }
+                        if ($frac > 0) {
+                            $res[$ct]['download'] += (float) ($s['download'] ?? 0) * $frac;
+                            $res[$ct]['upload']   += (float) ($s['upload'] ?? 0) * $frac;
+                            $res[$ct]['sessoes']++;
+                        }
+                    }
+                }
+                curl_multi_remove_handle($mh, $ch);
+                curl_close($ch);
+                unset($ativos[(int) $ch]);
+                $abrir();
+            }
+            if ($ativos) {
+                curl_multi_select($mh, 1.0);
+            }
+        }
+        curl_multi_close($mh);
+        foreach (array_keys($falhas) as $ct) {
+            unset($res[$ct]);
+        }
+        planos_out(['success' => true, 'consumo' => $res, 'falhas' => array_keys($falhas)]);
+    }
+
     // Registro na auditoria quando a planilha e baixada
     if ($action === 'log' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $entrada = json_decode((string) file_get_contents('php://input'), true);
@@ -235,6 +344,7 @@ $planosPadrao = ['50MEGA Rural VAN', 'APUAREMA 50MEGA', 'Fibra 50 Mega', 'PLANO 
             <a href="leads.php" class="nav-item"><i class="fa-solid fa-users w-5 text-center"></i><span>Leads</span></a>
             <a href="posvenda.php" class="nav-item"><i class="fa-solid fa-headset w-5 text-center"></i><span>Pós-venda</span></a>
             <a href="comprovantes.php" class="nav-item"><i class="fa-solid fa-file-invoice-dollar w-5 text-center"></i><span>Comprovantes</span></a>
+            <a href="campanha_upgrade.php" class="nav-item"><i class="fa-solid fa-cake-candles w-5 text-center"></i><span>Campanha upgrade</span></a>
             <a href="planos_sgp.php" class="nav-item active"><i class="fa-solid fa-table-list w-5 text-center"></i><span>Clientes por plano</span></a>
             <a href="conectados.php" class="nav-item"><i class="fa-solid fa-wifi w-5 text-center"></i><span>Conectados</span></a>
             <a href="historico.php" class="nav-item"><i class="fa-solid fa-clock-rotate-left w-5 text-center"></i><span>Histórico</span></a>
@@ -281,6 +391,19 @@ $planosPadrao = ['50MEGA Rural VAN', 'APUAREMA 50MEGA', 'Fibra 50 Mega', 'PLANO 
                 <button id="btnCsv" class="pl-btn" disabled><i class="fa-solid fa-file-csv"></i> Baixar planilha (CSV)</button>
                 <span id="status" class="pl-muted"></span>
             </div>
+            <div class="flex flex-wrap items-center gap-3 mt-4" id="acoesResultado" style="display:none">
+                <label class="text-white text-sm">Consumo dos últimos
+                    <select id="diasConsumo" class="pl-input p-2 rounded-xl text-sm">
+                        <option value="30" selected>30 dias</option>
+                        <option value="15">15 dias</option>
+                        <option value="7">7 dias</option>
+                        <option value="60">60 dias</option>
+                    </select>
+                </label>
+                <button id="btnConsumo" class="pl-btn"><i class="fa-solid fa-gauge-high"></i> Calcular consumo</button>
+                <button id="btnTop" class="pl-btn" disabled><i class="fa-solid fa-ranking-star"></i> Top 30 (CSV)</button>
+                <button id="btnCampanha" class="pl-btn"><i class="fa-solid fa-cake-candles"></i> Adicionar à campanha de upgrade</button>
+            </div>
             <div class="pl-bar mt-4" id="barra" style="display:none"><div id="barraFill"></div></div>
         </section>
 
@@ -289,7 +412,7 @@ $planosPadrao = ['50MEGA Rural VAN', 'APUAREMA 50MEGA', 'Fibra 50 Mega', 'PLANO 
             <div class="pl-scroll">
                 <table class="pl-tab">
                     <thead><tr>
-                        <th>Contrato</th><th>Nome</th><th>Telefones</th><th>Endereço</th><th>Plano</th><th>Status</th>
+                        <th>Contrato</th><th>Nome</th><th>Telefones</th><th>Endereço</th><th>Plano</th><th>Status</th><th>Consumo estimado (GB)</th>
                     </tr></thead>
                     <tbody id="corpo"></tbody>
                 </table>
@@ -314,15 +437,82 @@ $planosPadrao = ['50MEGA Rural VAN', 'APUAREMA 50MEGA', 'Fibra 50 Mega', 'PLANO 
     const endereco = l => [l.logradouro + (l.numero ? ', ' + l.numero : ''), l.complemento, l.bairro, l.cidade + (l.uf ? '/' + l.uf : ''), l.cep && 'CEP ' + l.cep].filter(x => x && x.trim()).join(' - ');
 
     function desenhar() {
-        $('corpo').innerHTML = linhas.map(l => `<tr><td>${l.contrato}</td><td>${esc(l.nome)}</td><td>${esc(l.telefones)}</td><td>${esc(endereco(l))}</td><td>${esc(l.plano)}</td><td>${esc(l.status)}</td></tr>`).join('');
+        $('corpo').innerHTML = linhas.map(l => `<tr><td>${l.contrato}</td><td>${esc(l.nome)}</td><td>${esc(l.telefones)}</td><td>${esc(endereco(l))}</td><td>${esc(l.plano)}</td><td>${esc(l.status)}</td><td>${l.gb == null ? '' : l.gb.toFixed(1).replace('.', ',')}</td></tr>`).join('');
     }
+
+    // O SGP so informa sessoes PPPoE (contador acumulado, sem zerar na virada do mes); o servidor rateia pelo tempo dentro da janela
+    $('btnConsumo').onclick = async () => {
+        const dias = Number($('diasConsumo').value);
+        const contratos = [...new Set(linhas.map(l => l.contrato))];
+        const LOTE = 10;
+        $('btnConsumo').disabled = true; $('btnTop').disabled = true; $('barra').style.display = 'block'; $('barraFill').style.width = '0';
+        let falhas = [];
+        const mapa = {};
+        try {
+            for (let i = 0; i < contratos.length; i += LOTE) {
+                const d = await api('consumo', { contratos: contratos.slice(i, i + LOTE), dias });
+                Object.assign(mapa, d.consumo); falhas.push(...d.falhas);
+                const feitos = Math.min(i + LOTE, contratos.length);
+                $('barraFill').style.width = (feitos / contratos.length * 100) + '%';
+                $('status').textContent = `Consultando consumo: ${feitos} de ${contratos.length}`;
+            }
+            if (falhas.length) {
+                $('status').textContent = `Repetindo ${falhas.length} consulta(s) que falharam…`;
+                const de = falhas; falhas = [];
+                for (let i = 0; i < de.length; i += LOTE) {
+                    const d = await api('consumo', { contratos: de.slice(i, i + LOTE), dias });
+                    Object.assign(mapa, d.consumo);
+                }
+            }
+            linhas.forEach(l => { const c = mapa[l.contrato]; l.gb = c ? c.download / 1e9 : null; l.sessoes = c ? c.sessoes : null; });
+            linhas.sort((a, b) => (b.gb ?? -1) - (a.gb ?? -1));
+            desenhar();
+            const sem = linhas.filter(l => l.gb == null).length;
+            $('status').textContent = `Consumo (download) estimado dos últimos ${dias} dias, do maior para o menor.` + (sem ? ` ${sem} contrato(s) sem resposta do SGP, rode de novo.` : '');
+            $('btnTop').disabled = false;
+        } catch (e) {
+            $('status').textContent = 'Erro: ' + e.message;
+        } finally {
+            $('btnConsumo').disabled = false;
+        }
+    };
+
+    $('btnTop').onclick = () => {
+        const top = linhas.filter(l => l.gb != null).slice(0, 30);
+        const cel = v => '"' + String(v ?? '').replace(/"/g, '""') + '"';
+        const csv = [['#', 'Contrato', 'Nome', 'Telefones', 'Plano', 'Download (GB)'], ...top.map((l, i) => [i + 1, l.contrato, l.nome, l.telefones, l.plano, l.gb.toFixed(1).replace('.', ',')])]
+            .map(r => r.map(cel).join(';')).join('\r\n');
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' }));
+        a.download = 'top30-consumo-' + new Date().toISOString().slice(0, 10) + '.csv';
+        a.click(); URL.revokeObjectURL(a.href);
+    };
+
+    $('btnCampanha').onclick = async () => {
+        if (!linhas.length || !confirm(`Adicionar ${linhas.length} contrato(s) à lista da campanha de upgrade?`)) return;
+        try {
+            let novos = 0, atualizados = 0;
+            for (let i = 0; i < linhas.length; i += 200) {
+                const r = await fetch('campanha_upgrade.php?action=importar', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ csrf: CSRF, clientes: linhas.slice(i, i + 200).map(l => ({ contrato: l.contrato, nome: l.nome, telefones: l.telefones, plano: l.plano })) }),
+                });
+                const d = await r.json().catch(() => ({ success: false, message: 'Resposta inválida (HTTP ' + r.status + ').' }));
+                if (!d.success) throw new Error(d.message || 'Erro');
+                novos += d.novos; atualizados += d.atualizados;
+            }
+            $('status').textContent = `Campanha: ${novos} adicionado(s), ${atualizados} já estavam e foram atualizados.`;
+        } catch (e) {
+            $('status').textContent = 'Erro: ' + e.message;
+        }
+    };
 
     $('btnBuscar').onclick = async () => {
         planosUsados = $('planos').value.split('\n').map(s => s.trim()).filter(Boolean);
         if (!planosUsados.length) { $('status').textContent = 'Informe ao menos um plano.'; return; }
         linhas = []; desenhar();
         $('btnBuscar').disabled = true; $('btnCsv').disabled = true;
-        $('resultado').style.display = 'none'; $('barra').style.display = 'block'; $('barraFill').style.width = '0';
+        $('resultado').style.display = 'none'; $('acoesResultado').style.display = 'none'; $('btnTop').disabled = true; $('barra').style.display = 'block'; $('barraFill').style.width = '0';
         const falhas = [];
         try {
             $('status').textContent = 'Listando clientes no SGP…';
@@ -350,6 +540,7 @@ $planosPadrao = ['50MEGA Rural VAN', 'APUAREMA 50MEGA', 'Fibra 50 Mega', 'PLANO 
             $('resumo').textContent = `${linhas.length} contrato(s) encontrado(s)` + (falhas.length ? ` — ATENÇÃO: ${falhas.length} cliente(s) não puderam ser consultados, rode de novo.` : '.');
             $('status').textContent = 'Concluído.';
             $('btnCsv').disabled = linhas.length === 0;
+            $('acoesResultado').style.display = linhas.length ? 'flex' : 'none';
         } catch (e) {
             $('status').textContent = 'Erro: ' + e.message;
         } finally {
