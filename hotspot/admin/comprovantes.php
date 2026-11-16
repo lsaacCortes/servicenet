@@ -51,7 +51,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $st = $pdo->prepare("SELECT nome, telefone, status FROM comprovantes WHERE id = ?");
     $st->execute([$id]);
     $c = $st->fetch();
-    if (!$c) {
+    if ($acao === 'verificar_sgp') {
+        $n = comprovantes_autobaixa($pdo);
+        @touch(sys_get_temp_dir() . '/sn_autobaixa.stamp');
+        $_SESSION['flash'] = ['success', $n > 0 ? $n . ' comprovante(s) baixado(s) automaticamente pelo SGP.' : 'Nenhuma baixa nova encontrada no SGP.'];
+    } elseif (!$c) {
         $_SESSION['flash'] = ['error', 'Comprovante não encontrado.'];
     } elseif ($acao === 'baixar' || $acao === 'descartar') {
         $novo = $acao === 'baixar' ? 'baixado' : 'descartado';
@@ -75,6 +79,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 $flash = $_SESSION['flash'] ?? null;
 unset($_SESSION['flash']);
+
+// Baixa automatica: confere no SGP se algum pendente ja teve o boleto baixado (no maximo a cada 5 min)
+$stamp = sys_get_temp_dir() . '/sn_autobaixa.stamp';
+if ($pendentes && (!is_file($stamp) || time() - filemtime($stamp) > 300)) {
+    @touch($stamp);
+    try {
+        $nAuto = comprovantes_autobaixa($pdo);
+        if ($nAuto > 0 && !$flash) {
+            $flash = ['success', $nAuto . ' comprovante(s) baixado(s) automaticamente pelo SGP.'];
+        }
+    } catch (Throwable $e) {
+        // falha na consulta ao SGP nao pode impedir a listagem
+    }
+}
 
 // ---- Listagem ----
 $where = 'status = ?';
@@ -256,7 +274,14 @@ function url_pagina(array $over): string
             </div>
         </form>
 
-        <div class="flex flex-wrap gap-2 mt-4">
+        <div class="flex flex-wrap gap-2 mt-4 items-center">
+            <?php if ($souAdmin && $pendentes): ?>
+                <form method="post" class="order-last ml-auto">
+                    <input type="hidden" name="csrf" value="<?= $h($_SESSION['csrf']) ?>">
+                    <input type="hidden" name="acao" value="verificar_sgp">
+                    <button class="cp-act" title="Baixa os pendentes cujo boleto já foi baixado no SGP"><i class="fa-solid fa-arrows-rotate"></i> Verificar baixas no SGP</button>
+                </form>
+            <?php endif; ?>
             <?php foreach (['pendente' => 'Pendentes', 'baixado' => 'Baixados', 'descartado' => 'Descartados'] as $k => $rot): ?>
                 <a href="<?= $h(url_pagina(['f' => $k, 'page' => 1])) ?>" class="tab-btn px-4 py-2 rounded-xl text-sm font-semibold <?= $filtro === $k ? 'active' : '' ?>">
                     <?= $rot ?><span class="cnt"><?= $cont[$k] ?></span>

@@ -312,6 +312,108 @@ function comprovantes_identificar(PDO $pdo, int $id): array
     return [$status !== 'erro', $msgs[$status]];
 }
 
+// ---------------------------------------------------------------
+// Baixa automatica: o SGP informa data (dataPagamento) e usuario (usuario_baixa) de cada titulo pago
+// ---------------------------------------------------------------
+
+// A data de pagamento do SGP nao tem hora; aceita baixa feita a partir de 1 dia antes do envio
+const COMPROVANTE_AUTOBAIXA_TOLERANCIA_DIAS = 1;
+// Baixas feitas por rotina automatica (ex.: gateway/PIX) nao provam que o comprovante foi tratado
+const COMPROVANTE_AUTOBAIXA_IGNORAR_USUARIOS = ['system'];
+
+// Titulos do CPF pagos a partir de $desde (AAAA-MM-DD). Devolve [ok, titulos, mensagem].
+function comprovantes_sgp_titulos_pagos(string $cpf, string $desde): array
+{
+    if (!defined('SGP_BASE_URL') || !defined('SGP_TOKEN') || SGP_TOKEN === '') {
+        return [false, [], 'SGP não configurado no config.php'];
+    }
+    $todos = [];
+    for ($offset = 0, $volta = 0; $volta < 5; $volta++) {
+        $ch = curl_init(rtrim(SGP_BASE_URL, '/') . '/api/ura/titulos/');
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_CONNECTTIMEOUT => 5,
+            CURLOPT_TIMEOUT        => 20,
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => [
+                'app'                   => defined('SGP_APP') ? SGP_APP : 'SGP',
+                'token'                 => SGP_TOKEN,
+                'cpfcnpj'               => $cpf,
+                'data_pagamento_inicio' => $desde,
+                'data_pagamento_fim'    => date('Y-m-d', strtotime('+1 day')), // sem o fim, o SGP so devolve o dia do inicio
+                'offset'                => $offset,
+            ],
+        ]);
+        $resp = curl_exec($ch);
+        $http = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        $j = $resp === false ? null : json_decode($resp, true);
+        if ($http !== 200 || !is_array($j) || !isset($j['titulos']) || !is_array($j['titulos'])) {
+            return [false, [], 'SGP (títulos) respondeu HTTP ' . $http];
+        }
+        $todos = array_merge($todos, $j['titulos']);
+        $offset += (int) ($j['paginacao']['limit'] ?? 250);
+        if ($offset >= (int) ($j['paginacao']['total'] ?? 0)) {
+            break;
+        }
+    }
+    return [true, $todos, ''];
+}
+
+// Para cada comprovante pendente com cliente identificado, procura no SGP uma baixa feita depois do envio
+// e, se achar, registra a baixa. Devolve quantos foram baixados. $limite = maximo de clientes consultados.
+function comprovantes_autobaixa(PDO $pdo, int $limite = 40): int
+{
+    $pend = $pdo->query("SELECT id, nome, telefone, recebido_em, cliente_json FROM comprovantes
+                         WHERE status = 'pendente' AND cliente_status = 'unico' ORDER BY recebido_em ASC")->fetchAll();
+    $cache = [];
+    $baixados = 0;
+    foreach ($pend as $c) {
+        $cl  = json_decode((string) $c['cliente_json'], true);
+        $cpf = preg_replace('/\D/', '', (string) ($cl[0]['cpf'] ?? ''));
+        if (strlen($cpf) < 11) {
+            continue;
+        }
+        $desde = date('Y-m-d', strtotime($c['recebido_em'] . ' -' . COMPROVANTE_AUTOBAIXA_TOLERANCIA_DIAS . ' days'));
+        $k = $cpf . '|' . $desde;
+        if (!isset($cache[$k])) {
+            if (count($cache) >= $limite) {
+                continue; // o resto fica para a proxima rodada
+            }
+            $cache[$k] = comprovantes_sgp_titulos_pagos($cpf, $desde);
+        }
+        [$ok, $titulos] = $cache[$k];
+        if (!$ok) {
+            continue;
+        }
+        $achado = null;
+        foreach ($titulos as $t) {
+            $user = trim((string) ($t['usuario_baixa'] ?? ''));
+            $dt   = substr((string) ($t['dataPagamento'] ?? ''), 0, 10);
+            if (($t['status'] ?? '') !== 'pago' || $user === '' || $dt < $desde
+                || in_array(strtolower($user), COMPROVANTE_AUTOBAIXA_IGNORAR_USUARIOS, true)) {
+                continue;
+            }
+            if ($achado === null || $dt < $achado['dt']) {
+                $achado = ['dt' => $dt, 'user' => $user, 'num' => $t['numeroDocumento'] ?? ($t['id'] ?? '')];
+            }
+        }
+        if ($achado === null) {
+            continue;
+        }
+        $nota = mb_substr('Baixa automática: título ' . $achado['num'] . ' baixado no SGP por ' . $achado['user']
+            . ' em ' . date('d/m/Y', strtotime($achado['dt'])), 0, 255);
+        $up = $pdo->prepare("UPDATE comprovantes SET status = 'baixado', baixado_por = ?, baixado_em = NOW(), anotacao = ?
+                             WHERE id = ? AND status = 'pendente'");
+        $up->execute(['SGP: ' . mb_substr($achado['user'], 0, 90), $nota, (int) $c['id']]);
+        if ($up->rowCount() > 0) {
+            $baixados++;
+            admin_log($pdo, 'comprovante_autobaixa', $c['nome'] ?: $c['telefone'], 'comprovante #' . $c['id'] . ' / SGP ' . $achado['user']);
+        }
+    }
+    return $baixados;
+}
+
 // CPF/CNPJ parcialmente oculto
 function comprovantes_doc_mascarado(string $d): string
 {
